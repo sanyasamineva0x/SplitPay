@@ -1,13 +1,5 @@
 from urllib.parse import urlencode
 
-BANK_SCHEMAS: dict[str, str] = {
-    "sber": "https://online.sberbank.ru/CSAFront/index.do",
-    "tinkoff": "https://www.tinkoff.ru/cf/",
-    "alfa": "https://alfa.me/",
-    "vtb": "https://online.vtb.ru/",
-    "raiffeisen": "https://pay.raif.ru/",
-}
-
 BANK_IDS: dict[str, str] = {
     "sber": "100000000111",
     "tinkoff": "100000000004",
