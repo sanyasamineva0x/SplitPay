@@ -7,10 +7,9 @@ from aiogram.types import (
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     InlineQuery,
-    InlineQueryResultArticle,
+    InlineQueryResultPhoto,
     InlineQueryResultsButton,
     InputMediaPhoto,
-    InputTextMessageContent,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +19,9 @@ from bot.services.payment import PaymentService
 
 router = Router()
 
+PLACEHOLDER_URL = (
+    "https://raw.githubusercontent.com/sanyasamineva0x/TGpay/main/assets/placeholder.png"
+)
 QUERY_RE = re.compile(r"^(\d+)\s*(.*)?$")
 
 
@@ -57,13 +59,14 @@ async def on_inline_query(inline_query: InlineQuery, session: AsyncSession) -> N
     amount_text = f"{amount // 100} ₽"
 
     results = [
-        InlineQueryResultArticle(
+        InlineQueryResultPhoto(
             id=f"{inline_query.from_user.id}:{amount}:{description}",
+            photo_url=PLACEHOLDER_URL,
+            thumbnail_url=PLACEHOLDER_URL,
             title=f"Запросить {amount_text}",
             description=description,
-            input_message_content=InputTextMessageContent(
-                message_text=f"Загрузка платежа {amount_text}..."
-            ),
+            photo_width=600,
+            photo_height=400,
         )
     ]
 
