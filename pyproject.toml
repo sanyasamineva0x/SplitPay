@@ -17,8 +17,10 @@ dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
     "ruff>=0.8",
-    "mypy>=1.13",
 ]
+
+[tool.setuptools.packages.find]
+include = ["bot*"]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

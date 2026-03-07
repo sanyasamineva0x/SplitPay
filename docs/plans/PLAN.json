@@ -128,7 +128,7 @@
     {
       "id": 11,
       "title": "Dockerfile",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/docker",
       "depends_on": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "files_create": ["Dockerfile", ".dockerignore"],
@@ -140,7 +140,7 @@
     {
       "id": 12,
       "title": "CI + README + CLAUDE.md",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/ci-readme",
       "depends_on": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
       "files_create": [".github/workflows/ci.yml", "README.md", "CLAUDE.md", "LICENSE"],
