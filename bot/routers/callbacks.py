@@ -1,10 +1,20 @@
+import logging
+
 from aiogram import Bot, Router
-from aiogram.types import BufferedInputFile, CallbackQuery, InputMediaPhoto
+from aiogram.types import (
+    BufferedInputFile,
+    CallbackQuery,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    InputMediaPhoto,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.callback_data import PaymentCallback
 from bot.db.repositories import UserRepo
 from bot.services.payment import PaymentService
+
+logger = logging.getLogger(__name__)
 
 router = Router()
 
@@ -38,13 +48,39 @@ async def on_payment_callback(
         return
 
     if result.card_bytes and callback.inline_message_id:
-        photo = BufferedInputFile(result.card_bytes.read(), filename="card.png")
-        keyboard = callback.message.reply_markup if callback.message else None
+        try:
+            # Для inline-сообщений нельзя загружать файлы —
+            # отправляем в личку, берём file_id, удаляем.
+            photo = BufferedInputFile(result.card_bytes.read(), filename="card.png")
+            tmp_msg = await bot.send_photo(
+                chat_id=callback.from_user.id,
+                photo=photo,
+                disable_notification=True,
+            )
+            file_id = tmp_msg.photo[-1].file_id
+            await bot.delete_message(
+                chat_id=callback.from_user.id, message_id=tmp_msg.message_id
+            )
 
-        await bot.edit_message_media(
-            inline_message_id=callback.inline_message_id,
-            media=InputMediaPhoto(media=photo),
-            reply_markup=keyboard,
-        )
+            keyboard = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(
+                            text="Я оплатил ✓",
+                            callback_data=PaymentCallback(
+                                payment_id=callback_data.payment_id, action="paid"
+                            ).pack(),
+                        ),
+                    ]
+                ]
+            )
+
+            await bot.edit_message_media(
+                inline_message_id=callback.inline_message_id,
+                media=InputMediaPhoto(media=file_id),
+                reply_markup=keyboard,
+            )
+        except Exception:
+            logger.exception("Ошибка обновления карточки")
 
     await callback.answer("Оплата отмечена ✓")
