@@ -1,0 +1,21 @@
+[project]
+name = "tgpay"
+version = "0.1.0"
+description = "Inline Telegram-бот для запросов на оплату через СБП"
+requires-python = ">=3.10"
+dependencies = [
+    "aiogram>=3.15,<4",
+    "sqlalchemy[asyncio]>=2.0,<3",
+    "aiosqlite>=0.20",
+    "pydantic-settings>=2.0,<3",
+    "pillow>=10.0,<11",
+    "qrcode[pil]>=7.0,<8",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "ruff>=0.8",
+    "mypy>=1.13",
+]
