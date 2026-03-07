@@ -20,7 +20,7 @@
     {
       "id": 2,
       "title": "Database — модели и engine",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/database",
       "depends_on": [1],
       "files_create": ["bot/db/__init__.py", "bot/db/engine.py", "bot/db/models.py", "bot/enums.py", "tests/__init__.py", "tests/conftest.py", "tests/test_models.py"],
