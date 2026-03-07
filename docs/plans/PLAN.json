@@ -1,0 +1,155 @@
+{
+  "project": "TGpay",
+  "created": "2026-03-07",
+  "design_doc": "docs/plans/2026-03-07-tgpay-design.md",
+  "implementation_plan": "docs/plans/2026-03-07-implementation.md",
+  "steps": [
+    {
+      "id": 1,
+      "title": "Scaffold проекта",
+      "status": "pending",
+      "branch": "feat/scaffold",
+      "depends_on": [],
+      "files_create": ["pyproject.toml", "bot/__init__.py", "bot/__main__.py", "bot/config.py", "bot/app.py", "bot/routers/__init__.py", ".env.example"],
+      "files_modify": [],
+      "acceptance": [
+        "pip install -e '.[dev]' завершается без ошибок",
+        "python -c 'from bot.app import create_bot, create_dispatcher' выводит OK"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Database — модели и engine",
+      "status": "pending",
+      "branch": "feat/database",
+      "depends_on": [1],
+      "files_create": ["bot/db/__init__.py", "bot/db/engine.py", "bot/db/models.py", "bot/enums.py", "tests/__init__.py", "tests/conftest.py", "tests/test_models.py"],
+      "files_modify": [],
+      "acceptance": [
+        "pytest tests/test_models.py -v — 2 PASSED"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Database — repositories",
+      "status": "pending",
+      "branch": "feat/repositories",
+      "depends_on": [2],
+      "files_create": ["bot/db/repositories.py", "tests/test_repositories.py"],
+      "files_modify": [],
+      "acceptance": [
+        "pytest tests/test_repositories.py -v — 5 PASSED"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Middleware — DB session injection",
+      "status": "pending",
+      "branch": "feat/middleware",
+      "depends_on": [3],
+      "files_create": ["bot/middlewares.py"],
+      "files_modify": ["bot/app.py", "bot/__main__.py"],
+      "acceptance": [
+        "python -c 'from bot.middlewares import DbSessionMiddleware' без ошибок"
+      ]
+    },
+    {
+      "id": 5,
+      "title": "СБП сервис",
+      "status": "pending",
+      "branch": "feat/sbp",
+      "depends_on": [1],
+      "files_create": ["bot/services/__init__.py", "bot/services/sbp.py", "tests/test_sbp.py"],
+      "files_modify": [],
+      "acceptance": [
+        "pytest tests/test_sbp.py -v — 3 PASSED"
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Card renderer",
+      "status": "pending",
+      "branch": "feat/card-renderer",
+      "depends_on": [1],
+      "files_create": ["bot/services/card_renderer.py", "tests/test_card_renderer.py", "assets/fonts/Inter-Bold.ttf"],
+      "files_modify": [],
+      "acceptance": [
+        "pytest tests/test_card_renderer.py -v — 3 PASSED"
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Payment сервис",
+      "status": "pending",
+      "branch": "feat/payment-service",
+      "depends_on": [3, 5, 6],
+      "files_create": ["bot/services/payment.py", "tests/test_payment_service.py"],
+      "files_modify": [],
+      "acceptance": [
+        "pytest tests/test_payment_service.py -v — 3 PASSED"
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Онбординг FSM",
+      "status": "pending",
+      "branch": "feat/onboarding",
+      "depends_on": [3, 4],
+      "files_create": ["bot/states.py", "bot/keyboards.py", "bot/routers/private.py"],
+      "files_modify": ["bot/routers/__init__.py"],
+      "acceptance": [
+        "python -c 'from bot.routers.private import router' без ошибок"
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Inline query + chosen result",
+      "status": "pending",
+      "branch": "feat/inline",
+      "depends_on": [7],
+      "files_create": ["bot/callback_data.py", "bot/routers/inline.py"],
+      "files_modify": ["bot/routers/__init__.py"],
+      "acceptance": [
+        "python -c 'from bot.routers.inline import router' без ошибок"
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Callback — Я оплатил",
+      "status": "pending",
+      "branch": "feat/callbacks",
+      "depends_on": [7],
+      "files_create": ["bot/routers/callbacks.py"],
+      "files_modify": ["bot/routers/__init__.py"],
+      "acceptance": [
+        "python -c 'from bot.routers.callbacks import router' без ошибок"
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Dockerfile",
+      "status": "pending",
+      "branch": "feat/docker",
+      "depends_on": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "files_create": ["Dockerfile", ".dockerignore"],
+      "files_modify": [],
+      "acceptance": [
+        "docker build -t tgpay . завершается успешно"
+      ]
+    },
+    {
+      "id": 12,
+      "title": "CI + README + CLAUDE.md",
+      "status": "pending",
+      "branch": "feat/ci-readme",
+      "depends_on": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      "files_create": [".github/workflows/ci.yml", "README.md", "CLAUDE.md", "LICENSE"],
+      "files_modify": [],
+      "acceptance": [
+        "ruff check bot/ tests/ — без ошибок",
+        "pytest tests/ -v — все тесты проходят",
+        "docker build -t tgpay . — успешно"
+      ]
+    }
+  ]
+}
