@@ -10,7 +10,15 @@ async def main() -> None:
     await create_tables()
     bot = create_bot()
     dp = create_dispatcher()
-    await dp.start_polling(bot)
+    await dp.start_polling(
+        bot,
+        allowed_updates=[
+            "message",
+            "callback_query",
+            "inline_query",
+            "chosen_inline_result",
+        ],
+    )
 
 
 if __name__ == "__main__":
