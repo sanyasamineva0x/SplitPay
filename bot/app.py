@@ -2,13 +2,13 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from bot.config import settings
+from bot.config import get_settings
 from bot.routers import router
 
 
 def create_bot() -> Bot:
     return Bot(
-        token=settings.bot_token,
+        token=get_settings().bot_token,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML),
     )
 

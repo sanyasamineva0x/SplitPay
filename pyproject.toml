@@ -2,7 +2,7 @@
 name = "tgpay"
 version = "0.1.0"
 description = "Inline Telegram-бот для запросов на оплату через СБП"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "aiogram>=3.15,<4",
     "sqlalchemy[asyncio]>=2.0,<3",
