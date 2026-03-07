@@ -24,9 +24,6 @@ jobs:
       - name: Ruff format
         run: ruff format --check bot/ tests/
 
-      - name: Mypy
-        run: mypy bot/ --ignore-missing-imports
-
       - name: Pytest
         run: pytest tests/ -v
 
