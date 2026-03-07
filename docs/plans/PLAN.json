@@ -7,7 +7,7 @@
     {
       "id": 1,
       "title": "Scaffold проекта",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/scaffold",
       "depends_on": [],
       "files_create": ["pyproject.toml", "bot/__init__.py", "bot/__main__.py", "bot/config.py", "bot/app.py", "bot/routers/__init__.py", ".env.example"],
