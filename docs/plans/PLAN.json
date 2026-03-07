@@ -44,7 +44,7 @@
     {
       "id": 4,
       "title": "Middleware — DB session injection",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/middleware",
       "depends_on": [3],
       "files_create": ["bot/middlewares.py"],
@@ -56,7 +56,7 @@
     {
       "id": 5,
       "title": "СБП сервис",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/sbp",
       "depends_on": [1],
       "files_create": ["bot/services/__init__.py", "bot/services/sbp.py", "tests/test_sbp.py"],
@@ -68,7 +68,7 @@
     {
       "id": 6,
       "title": "Card renderer",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/card-renderer",
       "depends_on": [1],
       "files_create": ["bot/services/card_renderer.py", "tests/test_card_renderer.py", "assets/fonts/Inter-Bold.ttf"],
@@ -80,7 +80,7 @@
     {
       "id": 7,
       "title": "Payment сервис",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/payment-service",
       "depends_on": [3, 5, 6],
       "files_create": ["bot/services/payment.py", "tests/test_payment_service.py"],
@@ -92,7 +92,7 @@
     {
       "id": 8,
       "title": "Онбординг FSM",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/onboarding",
       "depends_on": [3, 4],
       "files_create": ["bot/states.py", "bot/keyboards.py", "bot/routers/private.py"],
@@ -104,7 +104,7 @@
     {
       "id": 9,
       "title": "Inline query + chosen result",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/inline",
       "depends_on": [7],
       "files_create": ["bot/callback_data.py", "bot/routers/inline.py"],
@@ -116,7 +116,7 @@
     {
       "id": 10,
       "title": "Callback — Я оплатил",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/callbacks",
       "depends_on": [7],
       "files_create": ["bot/routers/callbacks.py"],
