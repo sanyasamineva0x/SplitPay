@@ -32,7 +32,7 @@
     {
       "id": 3,
       "title": "Database — repositories",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/repositories",
       "depends_on": [2],
       "files_create": ["bot/db/repositories.py", "tests/test_repositories.py"],
