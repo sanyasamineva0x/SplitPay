@@ -18,7 +18,11 @@ Layered monolith: `bot/routers/` → `bot/services/` → `bot/db/repositories.py
 - Прогресс: `docs/plans/PLAN.json`
 
 ## Конвенции
-- Комментарии и строки на русском
+- Язык кода: Python, комментарии и строки на русском
+- Форматтер: `ruff format`
+- Линтер: `ruff check`
+- Типы: `mypy --ignore-missing-imports`
+- Тесты: pytest, async тесты через pytest-asyncio
 - amount всегда в копейках (int), 50000 = 500₽
 - Коммиты на русском: `feat: описание`, `fix: описание`
 - TDD: сначала тест, потом реализация
