@@ -1,0 +1,23 @@
+# Секреты
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+
+# БД
+*.db
+data/
+
+# Кеши инструментов
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
