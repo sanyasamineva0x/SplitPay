@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from aiogram import Bot, Router
 from aiogram.types import (
-    BufferedInputFile,
     CallbackQuery,
     InputMediaPhoto,
 )
@@ -12,6 +11,7 @@ from bot.callback_data import ExpenseCallback
 from bot.db.repositories import UserRepo
 from bot.keyboards import expense_keyboard
 from bot.services.expense_service import ExpenseService
+from bot.upload import upload_photo
 
 router = Router()
 
@@ -57,13 +57,10 @@ async def on_expense_callback(
         await callback.answer("Неизвестное действие", show_alert=True)
         return
 
-    # Workaround: отправить фото в ЛС → file_id → удалить → edit inline
-    photo_msg = await bot.send_photo(
-        chat_id=user_id,
-        photo=BufferedInputFile(result.card_image.read(), filename="card.png"),
+    # Загрузить карточку → file_id (через канал или ЛС создателя)
+    file_id = await upload_photo(
+        bot, result.card_image.read(), result.expense.creator_id
     )
-    file_id = photo_msg.photo[-1].file_id
-    await bot.delete_message(chat_id=user_id, message_id=photo_msg.message_id)
 
     # Сохранить file_id
     await ExpenseService.set_card_file_id(session, expense_id, file_id)

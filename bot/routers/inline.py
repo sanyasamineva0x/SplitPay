@@ -1,26 +1,37 @@
 from __future__ import annotations
 
+import logging
 import re
 
 from aiogram import Bot, Router
 from aiogram.types import (
-    BufferedInputFile,
     ChosenInlineResult,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
     InlineQuery,
     InlineQueryResultArticle,
+    InlineQueryResultCachedPhoto,
     InputMediaPhoto,
     InputTextMessageContent,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from bot.config import get_settings
 from bot.db.repositories import UserRepo
 from bot.keyboards import expense_keyboard
+from bot.services.card_renderer import render_placeholder
 from bot.services.expense_service import ExpenseService
+from bot.upload import upload_photo
+
+logger = logging.getLogger(__name__)
 
 router = Router()
 
 # Парсинг: целые и дробные суммы (точка/запятая), 1-2 знака после
 _QUERY_RE = re.compile(r"^(\d+(?:[.,]\d{1,2})?)\s+(.+)$")
+
+# Кэш file_id placeholder-карточки (загружается лениво при первом запросе)
+_placeholder_file_id: str | None = None
 
 
 def parse_inline_query(text: str) -> tuple[int, str] | None:
@@ -60,9 +71,22 @@ def _format_amount(kopecks: int) -> str:
     return f"{rubles:,} ₽".replace(",", " ")
 
 
+async def _get_placeholder_file_id(bot: Bot, chat_id: int) -> str:
+    """Получить file_id placeholder-карточки (лениво загружает при первом вызове)."""
+    global _placeholder_file_id  # noqa: PLW0603
+    if _placeholder_file_id is not None:
+        return _placeholder_file_id
+
+    placeholder = render_placeholder()
+    file_id = await upload_photo(bot, placeholder.read(), chat_id)
+    _placeholder_file_id = file_id
+    return file_id
+
+
 @router.inline_query()
 async def on_inline_query(
     inline_query: InlineQuery,
+    bot: Bot,
     session: AsyncSession,
 ) -> None:
     """Обработка inline query: парсинг суммы и описания."""
@@ -94,7 +118,7 @@ async def on_inline_query(
                     title="Формат: сумма описание",
                     description="Пример: 3000 за ужин",
                     input_message_content=InputTextMessageContent(
-                        message_text="Формат: @SplitPayBot <сумма> <описание>\n"
+                        message_text="Формат: @SplitPayBot [сумма] [описание]\n"
                         "Пример: @SplitPayBot 3000 за ужин",
                     ),
                 )
@@ -106,16 +130,50 @@ async def on_inline_query(
 
     amount, description = parsed
 
+    # Получить file_id placeholder-а (лениво загружается при первом вызове)
+    settings = get_settings()
+    upload_target = settings.upload_chat_id or inline_query.from_user.id
+    try:
+        placeholder_fid = await _get_placeholder_file_id(bot, upload_target)
+    except Exception:
+        logger.exception("Не удалось загрузить placeholder")
+        # Fallback — текстовый результат (edit_message_media не сработает,
+        # но хотя бы inline query не сломается)
+        await inline_query.answer(
+            results=[
+                InlineQueryResultArticle(
+                    id="expense",
+                    title=f"{_format_amount(amount)} — {description}",
+                    description="Нажмите, чтобы отправить в чат",
+                    input_message_content=InputTextMessageContent(
+                        message_text=f"💰 {_format_amount(amount)} — {description}\n\n"
+                        "Загрузка карточки...",
+                    ),
+                )
+            ],
+            cache_time=5,
+            is_personal=True,
+        )
+        return
+
+    # Отправляем фото-placeholder с кнопкой-заглушкой.
+    # reply_markup ОБЯЗАТЕЛЕН — без него Telegram не пришлёт inline_message_id
+    # в chosen_inline_result, и edit_message_media будет невозможен.
+    loading_keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⏳ Загрузка...", callback_data="noop")]
+        ]
+    )
     await inline_query.answer(
         results=[
-            InlineQueryResultArticle(
+            InlineQueryResultCachedPhoto(
                 id="expense",
+                photo_file_id=placeholder_fid,
                 title=f"{_format_amount(amount)} — {description}",
                 description="Нажмите, чтобы отправить в чат",
-                input_message_content=InputTextMessageContent(
-                    message_text=f"💰 {_format_amount(amount)} — {description}\n\n"
-                    "Загрузка карточки...",
-                ),
+                caption=f"💰 {_format_amount(amount)} — {description}\n\n"
+                "Загрузка карточки...",
+                reply_markup=loading_keyboard,
             )
         ],
         cache_time=5,
@@ -157,18 +215,13 @@ async def on_chosen_inline_result(
             session, expense.id, chosen.inline_message_id
         )
 
-    # Workaround: отправить фото в ЛС → получить file_id → удалить
-    photo_msg = await bot.send_photo(
-        chat_id=creator_id,
-        photo=BufferedInputFile(result.card_image.read(), filename="card.png"),
-    )
-    file_id = photo_msg.photo[-1].file_id
-    await bot.delete_message(chat_id=creator_id, message_id=photo_msg.message_id)
+    # Загрузить карточку → file_id (через канал или ЛС создателя)
+    file_id = await upload_photo(bot, result.card_image.read(), creator_id)
 
     # Сохранить file_id
     await ExpenseService.set_card_file_id(session, expense.id, file_id)
 
-    # Обновить inline-сообщение: текст → фото + кнопки
+    # Обновить inline-сообщение: placeholder → карточка + кнопки
     if chosen.inline_message_id:
         await bot.edit_message_media(
             inline_message_id=chosen.inline_message_id,
