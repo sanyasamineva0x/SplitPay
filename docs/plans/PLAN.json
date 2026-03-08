@@ -124,7 +124,7 @@
       "id": 7,
       "title": "Переписать inline handler",
       "description": "Парсинг '@SplitPayBot 3000 за ужин' (целые и дробные суммы). Создание Expense через ExpenseService. Кнопки: 'Я должен 💰' (join) + 'Я отдал ✓' (settle). Тесты на парсинг.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/inline-expense",
       "depends_on": [6],
       "files_modify": [
