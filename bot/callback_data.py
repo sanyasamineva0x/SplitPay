@@ -1,6 +1,4 @@
-from aiogram.filters.callback_data import CallbackData
+"""Callback data классы для inline-кнопок.
 
-
-class PaymentCallback(CallbackData, prefix="pay"):
-    payment_id: int
-    action: str  # "paid"
+TODO: будет добавлен ExpenseCallback в шаге 5 (feat/new-card-design).
+"""

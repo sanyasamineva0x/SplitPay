@@ -1,6 +1,6 @@
 import pytest
 
-from bot.db.repositories import PaymentRepo, UserRepo
+from bot.db.repositories import UserRepo
 
 
 pytestmark = pytest.mark.asyncio(loop_scope="function")
@@ -32,33 +32,3 @@ async def test_user_set_onboarded(db_session):
     )
     assert user.is_onboarded is True
     assert user.phone == "+79991234567"
-
-
-async def test_payment_create_and_get(db_session):
-    await UserRepo.upsert(db_session, telegram_id=1, first_name="Alice")
-    payment = await PaymentRepo.create(
-        db_session, creator_id=1, amount=50000, description="за ужин"
-    )
-    assert payment.id is not None
-
-    fetched = await PaymentRepo.get_by_id(db_session, payment.id)
-    assert fetched is not None
-    assert fetched.amount == 50000
-
-
-async def test_payment_add_participant(db_session):
-    await UserRepo.upsert(db_session, telegram_id=1, first_name="Creator")
-    await UserRepo.upsert(db_session, telegram_id=2, first_name="Payer")
-    payment = await PaymentRepo.create(
-        db_session, creator_id=1, amount=50000, description="тест"
-    )
-
-    added = await PaymentRepo.add_participant(
-        db_session, payment_id=payment.id, user_id=2
-    )
-    assert added is True
-
-    duplicate = await PaymentRepo.add_participant(
-        db_session, payment_id=payment.id, user_id=2
-    )
-    assert duplicate is False

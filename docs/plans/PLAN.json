@@ -2,13 +2,15 @@
   "project": "SplitPay",
   "created": "2026-03-08",
   "design_doc": "docs/plans/2026-03-08-splitpay-design.md",
+  "implementation_plan": "docs/plans/2026-03-08-implementation.md",
   "steps": [
     {
       "id": 1,
       "title": "Удаление старого кода (sbp, payment, qrcode)",
       "description": "Удалить bot/services/sbp.py, bot/services/payment.py, tests/test_sbp.py, tests/test_payment_service.py. Убрать qrcode из зависимостей. Убрать старые модели Payment/PaymentParticipant. Очистить роутеры (заглушки). Убрать QR-логику из card_renderer.py.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/cleanup-old-code",
+      "pr": "https://github.com/sanyasamineva0x/SplitPay/pull/13",
       "depends_on": [],
       "files_delete": [
         "bot/services/sbp.py",
@@ -33,8 +35,8 @@
     },
     {
       "id": 2,
-      "title": "Переименование TGpay → SplitPay",
-      "description": "Переименовать проект во всех файлах: pyproject.toml, config.py, тексты бота, README, CLAUDE.md, Dockerfile, CI.",
+      "title": "Переименование TGpay → SplitPay + тексты",
+      "description": "Переименовать проект во всех файлах. Обновить тексты онбординга: приветствие, инструкции, убрать СБП. Обновить CLAUDE.md: название, описание, стек, ссылки.",
       "status": "pending",
       "branch": "feat/rename-splitpay",
       "depends_on": [1],
@@ -51,28 +53,32 @@
       ],
       "acceptance": [
         "grep -r 'TGpay' bot/ — пусто",
-        "grep 'splitpay' pyproject.toml — найдено"
+        "grep -r 'TGpayBot' bot/ — пусто",
+        "grep 'splitpay' pyproject.toml — найдено",
+        "grep 'SplitPayBot' bot/routers/private.py — найдено"
       ]
     },
     {
       "id": 3,
-      "title": "Новые модели: Expense, ExpenseParticipant",
-      "description": "Expense: id, creator_id, amount, description, inline_message_id, card_file_id, created_at. ExpenseParticipant: expense_id, user_id, amount (доля), is_settled, settled_at. TDD.",
+      "title": "Новые модели: Expense, ExpenseParticipant + ExpenseCallback",
+      "description": "Expense: id, creator_id, amount, description, inline_message_id, card_file_id, created_at. ExpenseParticipant: expense_id, user_id, amount (доля), is_settled, settled_at. ExpenseCallback в callback_data.py. TDD.",
       "status": "pending",
       "branch": "feat/expense-models",
       "depends_on": [1],
       "files_modify": [
         "bot/db/models.py",
+        "bot/callback_data.py",
         "tests/test_models.py"
       ],
       "acceptance": [
-        "pytest tests/test_models.py -v — 3+ PASSED"
+        "pytest tests/test_models.py -v — 3+ PASSED",
+        "python -c 'from bot.callback_data import ExpenseCallback' — без ошибок"
       ]
     },
     {
       "id": 4,
       "title": "Репозиторий ExpenseRepo",
-      "description": "CRUD: create, get_by_id, set_inline_message_id, set_card_file_id, add_participant, settle_participant. TDD.",
+      "description": "CRUD: create, get_by_id, set_inline_message_id, set_card_file_id, add_participant, settle_participant, update_participant_amounts. TDD.",
       "status": "pending",
       "branch": "feat/expense-repo",
       "depends_on": [3],
@@ -81,19 +87,18 @@
         "tests/test_repositories.py"
       ],
       "acceptance": [
-        "pytest tests/test_repositories.py -v — 8+ PASSED"
+        "pytest tests/test_repositories.py -v — 10+ PASSED"
       ]
     },
     {
       "id": 5,
       "title": "Адаптация card_renderer.py (новый дизайн)",
-      "description": "Убрать QR. Показывать: сумму, описание, реквизиты создателя (банк + телефон), список должников со статусом (○/✓) и суммой. Новый ExpenseCallback в callback_data.py. TDD.",
+      "description": "Убрать QR. Показывать: сумму, описание, реквизиты создателя (банк + телефон), список должников со статусом (○/✓) и суммой. Если нет участников — подсказка. TDD.",
       "status": "pending",
       "branch": "feat/new-card-design",
       "depends_on": [2],
       "files_modify": [
         "bot/services/card_renderer.py",
-        "bot/callback_data.py",
         "tests/test_card_renderer.py"
       ],
       "acceptance": [
@@ -103,7 +108,7 @@
     {
       "id": 6,
       "title": "Сервис expense_service.py (split-логика)",
-      "description": "create_expense, join_expense (добавить участника, пересчитать доли), settle_debt (отметить погашение). Равные доли: amount / (creator + participants). TDD.",
+      "description": "create_expense, join_expense (пересчёт долей, остаток первому), settle_debt. Валидация: сумма 1-1000000₽, описание 1-100 символов, создатель не может join/settle. TDD.",
       "status": "pending",
       "branch": "feat/expense-service",
       "depends_on": [4, 5],
@@ -112,56 +117,47 @@
         "tests/test_expense_service.py"
       ],
       "acceptance": [
-        "pytest tests/test_expense_service.py -v — 6+ PASSED"
+        "pytest tests/test_expense_service.py -v — 9+ PASSED"
       ]
     },
     {
       "id": 7,
       "title": "Переписать inline handler",
-      "description": "Парсинг '@SplitPayBot 3000 за ужин'. Создание Expense через ExpenseService. Кнопки: 'Я должен' (join) + 'Я отдал ✓' (settle).",
+      "description": "Парсинг '@SplitPayBot 3000 за ужин' (целые и дробные суммы). Создание Expense через ExpenseService. Кнопки: 'Я должен 💰' (join) + 'Я отдал ✓' (settle). Тесты на парсинг.",
       "status": "pending",
       "branch": "feat/inline-expense",
       "depends_on": [6],
       "files_modify": [
         "bot/routers/inline.py"
       ],
+      "files_create": [
+        "tests/test_inline.py"
+      ],
       "acceptance": [
-        "python -c 'from bot.routers.inline import router' — без ошибок",
+        "pytest tests/test_inline.py -v — 4+ PASSED",
         "ruff check bot/routers/inline.py — без ошибок"
       ]
     },
     {
       "id": 8,
       "title": "Переписать callback handler",
-      "description": "Обработка ExpenseCallback: action='join' — добавить участника, action='settle' — отметить погашение. Защита: создатель не может join/settle. Дубликаты обрабатываются.",
+      "description": "Обработка ExpenseCallback: action='join' — добавить участника и пересчитать, action='settle' — отметить погашение. Защита: создатель не может join/settle, дубликаты отклоняются. Workaround file_id для inline. Тесты.",
       "status": "pending",
       "branch": "feat/callbacks-expense",
       "depends_on": [6],
       "files_modify": [
         "bot/routers/callbacks.py"
       ],
+      "files_create": [
+        "tests/test_callbacks.py"
+      ],
       "acceptance": [
-        "python -c 'from bot.routers.callbacks import router' — без ошибок",
+        "pytest tests/test_callbacks.py -v — 5+ PASSED",
         "ruff check bot/routers/callbacks.py — без ошибок"
       ]
     },
     {
       "id": 9,
-      "title": "Обновить онбординг (тексты SplitPay)",
-      "description": "Обновить тексты: приветствие, инструкции, примеры. Убрать упоминания СБП. Заменить @TGpayBot на @SplitPayBot.",
-      "status": "pending",
-      "branch": "feat/onboarding-texts",
-      "depends_on": [2],
-      "files_modify": [
-        "bot/routers/private.py"
-      ],
-      "acceptance": [
-        "grep 'SplitPayBot' bot/routers/private.py — найдено",
-        "grep 'TGpayBot' bot/routers/private.py — пусто"
-      ]
-    },
-    {
-      "id": 10,
       "title": "docker-compose.yml",
       "description": "Сервис bot: build Dockerfile, env_file .env, volume ./data для SQLite, restart unless-stopped. Обновить default database_url в config.py.",
       "status": "pending",
@@ -180,12 +176,12 @@
       ]
     },
     {
-      "id": 11,
+      "id": 10,
       "title": "Railway deploy config",
       "description": "railway.json + Procfile. Кнопка 'Deploy on Railway' в README.",
       "status": "pending",
       "branch": "feat/railway-deploy",
-      "depends_on": [10],
+      "depends_on": [9],
       "files_create": [
         "railway.json",
         "Procfile"
@@ -196,12 +192,12 @@
       ]
     },
     {
-      "id": 12,
+      "id": 11,
       "title": "Обновить README",
       "description": "Полностью переписать: описание SplitPay, возможности, быстрый старт (Docker Compose + Railway), стек, архитектура, примеры использования.",
       "status": "pending",
       "branch": "feat/readme-update",
-      "depends_on": [7, 8, 9, 10, 11],
+      "depends_on": [7, 8, 9, 10],
       "files_modify": [
         "README.md"
       ],
@@ -212,18 +208,15 @@
       ]
     },
     {
-      "id": 13,
-      "title": "Обновить CLAUDE.md и финальная проверка",
-      "description": "CLAUDE.md: название SplitPay, описание, стек, ссылка на design doc. Финальная проверка: ruff, pytest, docker build.",
+      "id": 12,
+      "title": "Финальная проверка",
+      "description": "ruff check + format, pytest, docker build. Ручной тест бота.",
       "status": "pending",
-      "branch": "feat/claude-md-final",
-      "depends_on": [12],
-      "files_modify": [
-        "CLAUDE.md",
-        ".github/workflows/ci.yml"
-      ],
+      "branch": "feat/final-check",
+      "depends_on": [11],
       "acceptance": [
         "ruff check bot/ tests/ — без ошибок",
+        "ruff format --check bot/ tests/ — без ошибок",
         "pytest tests/ -v — все тесты проходят",
         "docker build -t splitpay . — успешно"
       ]
