@@ -94,7 +94,7 @@
       "id": 5,
       "title": "Адаптация card_renderer.py (новый дизайн)",
       "description": "Убрать QR. Показывать: сумму, описание, реквизиты создателя (банк + телефон), список должников со статусом (○/✓) и суммой. Если нет участников — подсказка. TDD.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/new-card-design",
       "depends_on": [2],
       "files_modify": [
