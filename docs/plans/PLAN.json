@@ -7,8 +7,9 @@
       "id": 1,
       "title": "Удаление старого кода (sbp, payment, qrcode)",
       "description": "Удалить bot/services/sbp.py, bot/services/payment.py, tests/test_sbp.py, tests/test_payment_service.py. Убрать qrcode из зависимостей. Убрать старые модели Payment/PaymentParticipant. Очистить роутеры (заглушки). Убрать QR-логику из card_renderer.py.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/cleanup-old-code",
+      "pr": "https://github.com/sanyasamineva0x/SplitPay/pull/13",
       "depends_on": [],
       "files_delete": [
         "bot/services/sbp.py",
