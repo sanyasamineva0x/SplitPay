@@ -62,7 +62,7 @@
       "id": 3,
       "title": "Новые модели: Expense, ExpenseParticipant + ExpenseCallback",
       "description": "Expense: id, creator_id, amount, description, inline_message_id, card_file_id, created_at. ExpenseParticipant: expense_id, user_id, amount (доля), is_settled, settled_at. ExpenseCallback в callback_data.py. TDD.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/expense-models",
       "depends_on": [1],
       "files_modify": [
