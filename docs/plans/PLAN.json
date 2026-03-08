@@ -179,7 +179,7 @@
       "id": 10,
       "title": "Railway deploy config",
       "description": "railway.json + Procfile. Кнопка 'Deploy on Railway' в README.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/railway-deploy",
       "depends_on": [9],
       "files_create": [
