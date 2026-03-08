@@ -2,6 +2,8 @@
 
 Запуск: python scripts/generate_og.py
 Результат: assets/og-preview.png (1280x640)
+
+Стиль: тёмная карточка на тёмном фоне, светло-голубой акцент.
 """
 
 from pathlib import Path
@@ -13,72 +15,142 @@ FONT_PATH = ROOT / "assets" / "fonts" / "Inter-Bold.ttf"
 OUTPUT = ROOT / "assets" / "og-preview.png"
 
 WIDTH, HEIGHT = 1280, 640
-BG_COLOR = (25, 25, 35)
-ACCENT = (99, 102, 241)
-TEXT_COLOR = (255, 255, 255)
-TEXT_SECONDARY = (180, 180, 200)
+
+# Цвета
+BG_OUTER = (22, 22, 30)
+BG_CARD = (42, 44, 58)
+ACCENT = (135, 200, 255)  # Светло-голубой
+TEXT_WHITE = (245, 245, 250)
+TEXT_GRAY = (160, 165, 185)
+TEXT_DIM = (110, 115, 135)
 
 
 def _load_font(size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.truetype(str(FONT_PATH), size)
 
 
+def _draw_glow(draw: ImageDraw.Draw, cx: int, cy: int, radius: int) -> None:
+    """Мягкое свечение — несколько полупрозрачных кругов."""
+    for i in range(6):
+        r = radius - i * (radius // 6)
+        alpha = 8 + i * 3
+        color = (ACCENT[0], ACCENT[1], ACCENT[2])
+        # Имитация свечения через круги с убывающей яркостью
+        glow_color = (
+            BG_OUTER[0] + (color[0] - BG_OUTER[0]) * alpha // 255,
+            BG_OUTER[1] + (color[1] - BG_OUTER[1]) * alpha // 255,
+            BG_OUTER[2] + (color[2] - BG_OUTER[2]) * alpha // 255,
+        )
+        draw.ellipse(
+            (cx - r, cy - r, cx + r, cy + r),
+            fill=glow_color,
+        )
+
+
 def generate() -> None:
-    img = Image.new("RGB", (WIDTH, HEIGHT), BG_COLOR)
+    img = Image.new("RGB", (WIDTH, HEIGHT), BG_OUTER)
     draw = ImageDraw.Draw(img)
 
-    font_title = _load_font(72)
-    font_sub = _load_font(28)
-    font_example = _load_font(22)
+    # Фоновое свечение (вверху справа)
+    _draw_glow(draw, WIDTH - 200, 120, 300)
 
-    # Заголовок
-    title = "SplitPay"
-    bbox = draw.textbbox((0, 0), title, font=font_title)
-    tw = bbox[2] - bbox[0]
+    # Карточка
+    card_margin = 60
+    card_top = 50
+    card_bottom = HEIGHT - 50
+    draw.rounded_rectangle(
+        (card_margin, card_top, WIDTH - card_margin, card_bottom),
+        radius=28,
+        fill=BG_CARD,
+    )
+
+    font_title = _load_font(80)
+    font_sub = _load_font(26)
+    font_example = _load_font(22)
+    font_stack = _load_font(18)
+
+    # Контент внутри карточки
+    content_x = card_margin + 70
+    content_y = card_top + 60
+
+    # Заголовок — жирный, светло-голубой
     draw.text(
-        ((WIDTH - tw) // 2, 160),
-        title,
+        (content_x, content_y),
+        "SplitPay",
         fill=ACCENT,
         font=font_title,
     )
 
-    # Подзаголовок
-    sub = "Inline Telegram-бот для разделения расходов"
-    bbox = draw.textbbox((0, 0), sub, font=font_sub)
-    sw = bbox[2] - bbox[0]
+    # Подзаголовок — белый
     draw.text(
-        ((WIDTH - sw) // 2, 260),
-        sub,
-        fill=TEXT_COLOR,
+        (content_x, content_y + 100),
+        "Inline Telegram-бот",
+        fill=TEXT_WHITE,
+        font=font_sub,
+    )
+    draw.text(
+        (content_x, content_y + 140),
+        "для разделения расходов между друзьями",
+        fill=TEXT_GRAY,
         font=font_sub,
     )
 
-    # Пример использования
+    # Пример — в «пилюле»
     example = "@SplitPayBot 3000 за ужин"
     bbox = draw.textbbox((0, 0), example, font=font_example)
     ew = bbox[2] - bbox[0]
     eh = bbox[3] - bbox[1]
 
-    # Фон для примера
-    pad_x, pad_y = 24, 12
-    ex = (WIDTH - ew) // 2
-    ey = 360
+    pill_x = content_x
+    pill_y = content_y + 230
+    pad_x, pad_y = 24, 14
     draw.rounded_rectangle(
-        (ex - pad_x, ey - pad_y, ex + ew + pad_x, ey + eh + pad_y),
-        radius=8,
-        fill=(45, 45, 60),
+        (pill_x, pill_y, pill_x + ew + pad_x * 2, pill_y + eh + pad_y * 2),
+        radius=22,
+        fill=(55, 58, 75),
+        outline=(80, 85, 110),
+        width=1,
     )
-    draw.text((ex, ey), example, fill=TEXT_SECONDARY, font=font_example)
-
-    # Стек
-    stack = "Python · aiogram 3 · SQLAlchemy · Pillow"
-    bbox = draw.textbbox((0, 0), stack, font=font_example)
-    stw = bbox[2] - bbox[0]
     draw.text(
-        ((WIDTH - stw) // 2, 480),
-        stack,
-        fill=(120, 120, 140),
+        (pill_x + pad_x, pill_y + pad_y),
+        example,
+        fill=ACCENT,
         font=font_example,
+    )
+
+    # Стек — внизу карточки
+    stack = "Python · aiogram 3 · SQLAlchemy · Pillow"
+    draw.text(
+        (content_x, card_bottom - 70),
+        stack,
+        fill=TEXT_DIM,
+        font=font_stack,
+    )
+
+    # Декоративный кружок справа (имитация 3D-элемента)
+    circle_cx = WIDTH - card_margin - 220
+    circle_cy = HEIGHT // 2
+    circle_r = 100
+
+    # Градиент-кружок (несколько слоёв)
+    for i in range(circle_r, 0, -1):
+        t = i / circle_r
+        color = (
+            int(ACCENT[0] * 0.3 + BG_CARD[0] * 0.7 * t + ACCENT[0] * (1 - t) * 0.5),
+            int(ACCENT[1] * 0.3 + BG_CARD[1] * 0.7 * t + ACCENT[1] * (1 - t) * 0.5),
+            int(ACCENT[2] * 0.3 + BG_CARD[2] * 0.7 * t + ACCENT[2] * (1 - t) * 0.5),
+        )
+        draw.ellipse(
+            (circle_cx - i, circle_cy - i, circle_cx + i, circle_cy + i),
+            fill=color,
+        )
+
+    # Символ внутри кружка
+    draw.text(
+        (circle_cx - 28, circle_cy - 26),
+        "₽",
+        fill=TEXT_WHITE,
+        font=_load_font(56),
     )
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)

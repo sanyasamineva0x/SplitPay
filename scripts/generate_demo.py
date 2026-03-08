@@ -7,6 +7,8 @@
 1. Inline-запрос: @SplitPayBot 3000 за ужин
 2. Карточка расхода (без участников)
 3. Карточка с участниками (после join)
+
+Стиль: тёмная тема, светло-голубой акцент.
 """
 
 from pathlib import Path
@@ -18,14 +20,17 @@ FONT_PATH = ROOT / "assets" / "fonts" / "Inter-Bold.ttf"
 OUTPUT = ROOT / "assets" / "demo.gif"
 
 WIDTH, HEIGHT = 480, 320
-BG = (30, 30, 40)
-CHAT_BG = (45, 45, 55)
-BUBBLE_BG = (55, 55, 70)
-ACCENT = (99, 102, 241)
-GREEN = (72, 187, 120)
-TEXT = (255, 255, 255)
-TEXT_DIM = (160, 160, 180)
-BTN_BG = (70, 70, 90)
+BG = (22, 22, 30)
+HEADER_BG = (30, 32, 42)
+CHAT_BG = (38, 40, 52)
+CARD_BG = (42, 44, 58)
+ACCENT = (135, 200, 255)  # Светло-голубой
+GREEN = (100, 210, 150)
+TEXT = (245, 245, 250)
+TEXT_DIM = (140, 145, 165)
+TEXT_HINT = (100, 105, 125)
+BTN_BG = (55, 58, 75)
+BTN_BORDER = (75, 78, 95)
 
 
 def _font(size: int) -> ImageFont.FreeTypeFont:
@@ -34,22 +39,48 @@ def _font(size: int) -> ImageFont.FreeTypeFont:
 
 def _draw_header(draw: ImageDraw.Draw) -> None:
     """Шапка чата."""
-    draw.rectangle((0, 0, WIDTH, 40), fill=(35, 35, 50))
+    draw.rectangle((0, 0, WIDTH, 40), fill=HEADER_BG)
     font = _font(14)
     draw.text((20, 12), "Групповой чат", fill=TEXT, font=font)
+    # Тонкая линия-разделитель
+    draw.line((0, 40, WIDTH, 40), fill=(50, 52, 65), width=1)
 
 
 def _draw_step_indicator(draw: ImageDraw.Draw, step: int, total: int) -> None:
     """Индикатор шага внизу."""
     font = _font(12)
     label = f"Шаг {step}/{total}"
-    draw.text((WIDTH - 80, HEIGHT - 20), label, fill=TEXT_DIM, font=font)
+    draw.text((WIDTH - 80, HEIGHT - 20), label, fill=TEXT_HINT, font=font)
     # Точки
     dot_y = HEIGHT - 16
     for i in range(total):
         x = 20 + i * 16
-        color = ACCENT if i < step else (80, 80, 100)
+        color = ACCENT if i < step else (60, 62, 75)
         draw.ellipse((x, dot_y, x + 8, dot_y + 8), fill=color)
+
+
+def _draw_buttons(draw: ImageDraw.Draw, card_x: int, card_w: int, btn_y: int) -> None:
+    """Кнопки «Я должен» и «Я отдал»."""
+    font_label = _font(12)
+    btn_w = (card_w - 8) // 2
+
+    draw.rounded_rectangle(
+        (card_x, btn_y, card_x + btn_w, btn_y + 32),
+        radius=8,
+        fill=BTN_BG,
+        outline=BTN_BORDER,
+        width=1,
+    )
+    draw.text((card_x + 16, btn_y + 8), "Я должен 💰", fill=ACCENT, font=font_label)
+
+    draw.rounded_rectangle(
+        (card_x + btn_w + 8, btn_y, card_x + card_w, btn_y + 32),
+        radius=8,
+        fill=BTN_BG,
+        outline=BTN_BORDER,
+        width=1,
+    )
+    draw.text((card_x + btn_w + 24, btn_y + 8), "Я отдал ✓", fill=TEXT, font=font_label)
 
 
 def frame_1_inline_query() -> Image.Image:
@@ -67,6 +98,8 @@ def frame_1_inline_query() -> Image.Image:
         (15, input_y, WIDTH - 15, input_y + 36),
         radius=18,
         fill=CHAT_BG,
+        outline=BTN_BORDER,
+        width=1,
     )
 
     # Текст в поле ввода
@@ -81,8 +114,8 @@ def frame_1_inline_query() -> Image.Image:
     result_y = input_y - 56
     draw.rounded_rectangle(
         (15, result_y, WIDTH - 15, result_y + 44),
-        radius=8,
-        fill=BUBBLE_BG,
+        radius=10,
+        fill=CARD_BG,
     )
     draw.text(
         (28, result_y + 6),
@@ -93,7 +126,7 @@ def frame_1_inline_query() -> Image.Image:
     draw.text(
         (28, result_y + 24),
         "Нажмите, чтобы отправить в чат",
-        fill=TEXT_DIM,
+        fill=TEXT_HINT,
         font=_font(11),
     )
 
@@ -107,13 +140,12 @@ def frame_2_card_empty() -> Image.Image:
     draw = ImageDraw.Draw(img)
     _draw_header(draw)
 
-    # Карточка
     card_x, card_y = 40, 60
     card_w, card_h = WIDTH - 80, 200
     draw.rounded_rectangle(
         (card_x, card_y, card_x + card_w, card_y + card_h),
-        radius=12,
-        fill=BUBBLE_BG,
+        radius=16,
+        fill=CARD_BG,
     )
 
     font_amount = _font(32)
@@ -128,7 +160,7 @@ def frame_2_card_empty() -> Image.Image:
     draw.text(
         (card_x + 24, card_y + 90),
         "Заплатил: @petya",
-        fill=TEXT_DIM,
+        fill=ACCENT,
         font=font_label,
     )
     draw.text(
@@ -142,33 +174,17 @@ def frame_2_card_empty() -> Image.Image:
     draw.text(
         (card_x + 24, card_y + 145),
         "Нажмите «Я должен»,",
-        fill=(120, 120, 150),
+        fill=TEXT_HINT,
         font=font_label,
     )
     draw.text(
         (card_x + 24, card_y + 162),
         "чтобы разделить счёт",
-        fill=(120, 120, 150),
+        fill=TEXT_HINT,
         font=font_label,
     )
 
-    # Кнопки
-    btn_y = card_y + card_h + 8
-    btn_w = (card_w - 8) // 2
-    draw.rounded_rectangle(
-        (card_x, btn_y, card_x + btn_w, btn_y + 32),
-        radius=6,
-        fill=BTN_BG,
-    )
-    draw.text((card_x + 16, btn_y + 8), "Я должен 💰", fill=TEXT, font=font_label)
-
-    draw.rounded_rectangle(
-        (card_x + btn_w + 8, btn_y, card_x + card_w, btn_y + 32),
-        radius=6,
-        fill=BTN_BG,
-    )
-    draw.text((card_x + btn_w + 24, btn_y + 8), "Я отдал ✓", fill=TEXT, font=font_label)
-
+    _draw_buttons(draw, card_x, card_w, card_y + card_h + 8)
     _draw_step_indicator(draw, 2, 3)
     return img
 
@@ -183,8 +199,8 @@ def frame_3_card_with_participants() -> Image.Image:
     card_w, card_h = WIDTH - 80, 200
     draw.rounded_rectangle(
         (card_x, card_y, card_x + card_w, card_y + card_h),
-        radius=12,
-        fill=BUBBLE_BG,
+        radius=16,
+        fill=CARD_BG,
     )
 
     font_amount = _font(32)
@@ -199,7 +215,7 @@ def frame_3_card_with_participants() -> Image.Image:
     draw.text(
         (card_x + 24, card_y + 90),
         "Заплатил: @petya",
-        fill=TEXT_DIM,
+        fill=ACCENT,
         font=font_label,
     )
 
@@ -217,23 +233,7 @@ def frame_3_card_with_participants() -> Image.Image:
             font=font_label,
         )
 
-    # Кнопки
-    btn_y = card_y + card_h + 8
-    btn_w = (card_w - 8) // 2
-    draw.rounded_rectangle(
-        (card_x, btn_y, card_x + btn_w, btn_y + 32),
-        radius=6,
-        fill=BTN_BG,
-    )
-    draw.text((card_x + 16, btn_y + 8), "Я должен 💰", fill=TEXT, font=font_label)
-
-    draw.rounded_rectangle(
-        (card_x + btn_w + 8, btn_y, card_x + card_w, btn_y + 32),
-        radius=6,
-        fill=BTN_BG,
-    )
-    draw.text((card_x + btn_w + 24, btn_y + 8), "Я отдал ✓", fill=TEXT, font=font_label)
-
+    _draw_buttons(draw, card_x, card_w, card_y + card_h + 8)
     _draw_step_indicator(draw, 3, 3)
     return img
 
