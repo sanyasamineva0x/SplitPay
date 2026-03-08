@@ -193,18 +193,24 @@
     },
     {
       "id": 11,
-      "title": "Обновить README",
-      "description": "Полностью переписать: описание SplitPay, возможности, быстрый старт (Docker Compose + Railway), стек, архитектура, примеры использования.",
+      "title": "Обновить README + рефакторинг по ревью",
+      "description": "1) Полностью переписать README: описание SplitPay, возможности, быстрый старт (Docker Compose + Railway), стек, архитектура, примеры использования. 2) Рефакторинг по замечаниям ревью PR #20/#21: извлечь expense_keyboard() из inline.py и callbacks.py в bot/keyboards.py (устранить дупликацию), убрать прямые вызовы ExpenseRepo из роутеров — вся работа с БД через ExpenseService.",
       "status": "pending",
       "branch": "feat/readme-update",
       "depends_on": [7, 8, 9, 10],
       "files_modify": [
-        "README.md"
+        "README.md",
+        "bot/keyboards.py",
+        "bot/routers/inline.py",
+        "bot/routers/callbacks.py"
       ],
       "acceptance": [
         "grep 'SplitPay' README.md — найдено",
         "grep 'docker-compose' README.md — найдено",
-        "grep 'Railway' README.md — найдено"
+        "grep 'Railway' README.md — найдено",
+        "expense_keyboard определена только в bot/keyboards.py (нет дупликации)",
+        "grep -r 'ExpenseRepo' bot/routers/ — пусто (роутеры работают через сервис)",
+        "pytest tests/ -v — все тесты проходят"
       ]
     },
     {
