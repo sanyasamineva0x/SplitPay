@@ -2,6 +2,7 @@
   "project": "SplitPay",
   "created": "2026-03-08",
   "design_doc": "docs/plans/2026-03-08-splitpay-design.md",
+  "implementation_plan": "docs/plans/2026-03-08-implementation.md",
   "steps": [
     {
       "id": 1,
