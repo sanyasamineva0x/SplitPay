@@ -1,154 +1,231 @@
 {
-  "project": "TGpay",
-  "created": "2026-03-07",
-  "design_doc": "docs/plans/2026-03-07-tgpay-design.md",
-  "implementation_plan": "docs/plans/2026-03-07-implementation.md",
+  "project": "SplitPay",
+  "created": "2026-03-08",
+  "design_doc": "docs/plans/2026-03-08-splitpay-design.md",
   "steps": [
     {
       "id": 1,
-      "title": "Scaffold проекта",
-      "status": "done",
-      "branch": "feat/scaffold",
+      "title": "Удаление старого кода (sbp, payment, qrcode)",
+      "description": "Удалить bot/services/sbp.py, bot/services/payment.py, tests/test_sbp.py, tests/test_payment_service.py. Убрать qrcode из зависимостей. Убрать старые модели Payment/PaymentParticipant. Очистить роутеры (заглушки). Убрать QR-логику из card_renderer.py.",
+      "status": "pending",
+      "branch": "feat/cleanup-old-code",
       "depends_on": [],
-      "files_create": ["pyproject.toml", "bot/__init__.py", "bot/__main__.py", "bot/config.py", "bot/app.py", "bot/routers/__init__.py", ".env.example"],
-      "files_modify": [],
+      "files_delete": [
+        "bot/services/sbp.py",
+        "bot/services/payment.py",
+        "tests/test_sbp.py",
+        "tests/test_payment_service.py"
+      ],
+      "files_modify": [
+        "pyproject.toml",
+        "bot/db/models.py",
+        "bot/db/repositories.py",
+        "bot/services/card_renderer.py",
+        "bot/routers/inline.py",
+        "bot/routers/callbacks.py",
+        "bot/callback_data.py"
+      ],
       "acceptance": [
-        "pip install -e '.[dev]' завершается без ошибок",
-        "python -c 'from bot.app import create_bot, create_dispatcher' выводит OK"
+        "qrcode отсутствует в pyproject.toml",
+        "ruff check bot/ — без ошибок",
+        "pip install -e '.[dev]' — без ошибок"
       ]
     },
     {
       "id": 2,
-      "title": "Database — модели и engine",
-      "status": "done",
-      "branch": "feat/database",
+      "title": "Переименование TGpay → SplitPay",
+      "description": "Переименовать проект во всех файлах: pyproject.toml, config.py, тексты бота, README, CLAUDE.md, Dockerfile, CI.",
+      "status": "pending",
+      "branch": "feat/rename-splitpay",
       "depends_on": [1],
-      "files_create": ["bot/db/__init__.py", "bot/db/engine.py", "bot/db/models.py", "bot/enums.py", "tests/__init__.py", "tests/conftest.py", "tests/test_models.py"],
-      "files_modify": [],
+      "files_modify": [
+        "pyproject.toml",
+        "bot/config.py",
+        ".env.example",
+        "bot/routers/private.py",
+        "bot/services/card_renderer.py",
+        "README.md",
+        "CLAUDE.md",
+        "Dockerfile",
+        ".github/workflows/ci.yml"
+      ],
       "acceptance": [
-        "pytest tests/test_models.py -v — 2 PASSED"
+        "grep -r 'TGpay' bot/ — пусто",
+        "grep 'splitpay' pyproject.toml — найдено"
       ]
     },
     {
       "id": 3,
-      "title": "Database — repositories",
-      "status": "done",
-      "branch": "feat/repositories",
-      "depends_on": [2],
-      "files_create": ["bot/db/repositories.py", "tests/test_repositories.py"],
-      "files_modify": [],
+      "title": "Новые модели: Expense, ExpenseParticipant",
+      "description": "Expense: id, creator_id, amount, description, inline_message_id, card_file_id, created_at. ExpenseParticipant: expense_id, user_id, amount (доля), is_settled, settled_at. TDD.",
+      "status": "pending",
+      "branch": "feat/expense-models",
+      "depends_on": [1],
+      "files_modify": [
+        "bot/db/models.py",
+        "tests/test_models.py"
+      ],
       "acceptance": [
-        "pytest tests/test_repositories.py -v — 5 PASSED"
+        "pytest tests/test_models.py -v — 3+ PASSED"
       ]
     },
     {
       "id": 4,
-      "title": "Middleware — DB session injection",
-      "status": "done",
-      "branch": "feat/middleware",
+      "title": "Репозиторий ExpenseRepo",
+      "description": "CRUD: create, get_by_id, set_inline_message_id, set_card_file_id, add_participant, settle_participant. TDD.",
+      "status": "pending",
+      "branch": "feat/expense-repo",
       "depends_on": [3],
-      "files_create": ["bot/middlewares.py"],
-      "files_modify": ["bot/app.py", "bot/__main__.py"],
+      "files_modify": [
+        "bot/db/repositories.py",
+        "tests/test_repositories.py"
+      ],
       "acceptance": [
-        "python -c 'from bot.middlewares import DbSessionMiddleware' без ошибок"
+        "pytest tests/test_repositories.py -v — 8+ PASSED"
       ]
     },
     {
       "id": 5,
-      "title": "СБП сервис",
-      "status": "done",
-      "branch": "feat/sbp",
-      "depends_on": [1],
-      "files_create": ["bot/services/__init__.py", "bot/services/sbp.py", "tests/test_sbp.py"],
-      "files_modify": [],
+      "title": "Адаптация card_renderer.py (новый дизайн)",
+      "description": "Убрать QR. Показывать: сумму, описание, реквизиты создателя (банк + телефон), список должников со статусом (○/✓) и суммой. Новый ExpenseCallback в callback_data.py. TDD.",
+      "status": "pending",
+      "branch": "feat/new-card-design",
+      "depends_on": [2],
+      "files_modify": [
+        "bot/services/card_renderer.py",
+        "bot/callback_data.py",
+        "tests/test_card_renderer.py"
+      ],
       "acceptance": [
-        "pytest tests/test_sbp.py -v — 3 PASSED"
+        "pytest tests/test_card_renderer.py -v — 4+ PASSED"
       ]
     },
     {
       "id": 6,
-      "title": "Card renderer",
-      "status": "done",
-      "branch": "feat/card-renderer",
-      "depends_on": [1],
-      "files_create": ["bot/services/card_renderer.py", "tests/test_card_renderer.py", "assets/fonts/Inter-Bold.ttf"],
-      "files_modify": [],
+      "title": "Сервис expense_service.py (split-логика)",
+      "description": "create_expense, join_expense (добавить участника, пересчитать доли), settle_debt (отметить погашение). Равные доли: amount / (creator + participants). TDD.",
+      "status": "pending",
+      "branch": "feat/expense-service",
+      "depends_on": [4, 5],
+      "files_create": [
+        "bot/services/expense_service.py",
+        "tests/test_expense_service.py"
+      ],
       "acceptance": [
-        "pytest tests/test_card_renderer.py -v — 3 PASSED"
+        "pytest tests/test_expense_service.py -v — 6+ PASSED"
       ]
     },
     {
       "id": 7,
-      "title": "Payment сервис",
-      "status": "done",
-      "branch": "feat/payment-service",
-      "depends_on": [3, 5, 6],
-      "files_create": ["bot/services/payment.py", "tests/test_payment_service.py"],
-      "files_modify": [],
+      "title": "Переписать inline handler",
+      "description": "Парсинг '@SplitPayBot 3000 за ужин'. Создание Expense через ExpenseService. Кнопки: 'Я должен' (join) + 'Я отдал ✓' (settle).",
+      "status": "pending",
+      "branch": "feat/inline-expense",
+      "depends_on": [6],
+      "files_modify": [
+        "bot/routers/inline.py"
+      ],
       "acceptance": [
-        "pytest tests/test_payment_service.py -v — 3 PASSED"
+        "python -c 'from bot.routers.inline import router' — без ошибок",
+        "ruff check bot/routers/inline.py — без ошибок"
       ]
     },
     {
       "id": 8,
-      "title": "Онбординг FSM",
-      "status": "done",
-      "branch": "feat/onboarding",
-      "depends_on": [3, 4],
-      "files_create": ["bot/states.py", "bot/keyboards.py", "bot/routers/private.py"],
-      "files_modify": ["bot/routers/__init__.py"],
+      "title": "Переписать callback handler",
+      "description": "Обработка ExpenseCallback: action='join' — добавить участника, action='settle' — отметить погашение. Защита: создатель не может join/settle. Дубликаты обрабатываются.",
+      "status": "pending",
+      "branch": "feat/callbacks-expense",
+      "depends_on": [6],
+      "files_modify": [
+        "bot/routers/callbacks.py"
+      ],
       "acceptance": [
-        "python -c 'from bot.routers.private import router' без ошибок"
+        "python -c 'from bot.routers.callbacks import router' — без ошибок",
+        "ruff check bot/routers/callbacks.py — без ошибок"
       ]
     },
     {
       "id": 9,
-      "title": "Inline query + chosen result",
-      "status": "done",
-      "branch": "feat/inline",
-      "depends_on": [7],
-      "files_create": ["bot/callback_data.py", "bot/routers/inline.py"],
-      "files_modify": ["bot/routers/__init__.py"],
+      "title": "Обновить онбординг (тексты SplitPay)",
+      "description": "Обновить тексты: приветствие, инструкции, примеры. Убрать упоминания СБП. Заменить @TGpayBot на @SplitPayBot.",
+      "status": "pending",
+      "branch": "feat/onboarding-texts",
+      "depends_on": [2],
+      "files_modify": [
+        "bot/routers/private.py"
+      ],
       "acceptance": [
-        "python -c 'from bot.routers.inline import router' без ошибок"
+        "grep 'SplitPayBot' bot/routers/private.py — найдено",
+        "grep 'TGpayBot' bot/routers/private.py — пусто"
       ]
     },
     {
       "id": 10,
-      "title": "Callback — Я оплатил",
-      "status": "done",
-      "branch": "feat/callbacks",
-      "depends_on": [7],
-      "files_create": ["bot/routers/callbacks.py"],
-      "files_modify": ["bot/routers/__init__.py"],
+      "title": "docker-compose.yml",
+      "description": "Сервис bot: build Dockerfile, env_file .env, volume ./data для SQLite, restart unless-stopped. Обновить default database_url в config.py.",
+      "status": "pending",
+      "branch": "feat/docker-compose",
+      "depends_on": [2],
+      "files_create": [
+        "docker-compose.yml"
+      ],
+      "files_modify": [
+        "bot/config.py",
+        ".env.example"
+      ],
       "acceptance": [
-        "python -c 'from bot.routers.callbacks import router' без ошибок"
+        "docker-compose config — валидный YAML",
+        "docker build -t splitpay . — успешно"
       ]
     },
     {
       "id": 11,
-      "title": "Dockerfile",
-      "status": "done",
-      "branch": "feat/docker",
-      "depends_on": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "files_create": ["Dockerfile", ".dockerignore"],
-      "files_modify": [],
+      "title": "Railway deploy config",
+      "description": "railway.json + Procfile. Кнопка 'Deploy on Railway' в README.",
+      "status": "pending",
+      "branch": "feat/railway-deploy",
+      "depends_on": [10],
+      "files_create": [
+        "railway.json",
+        "Procfile"
+      ],
       "acceptance": [
-        "docker build -t tgpay . завершается успешно"
+        "railway.json — валидный JSON",
+        "Procfile содержит 'worker: python -m bot'"
       ]
     },
     {
       "id": 12,
-      "title": "CI + README + CLAUDE.md",
-      "status": "done",
-      "branch": "feat/ci-readme",
-      "depends_on": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-      "files_create": [".github/workflows/ci.yml", "README.md", "CLAUDE.md", "LICENSE"],
-      "files_modify": [],
+      "title": "Обновить README",
+      "description": "Полностью переписать: описание SplitPay, возможности, быстрый старт (Docker Compose + Railway), стек, архитектура, примеры использования.",
+      "status": "pending",
+      "branch": "feat/readme-update",
+      "depends_on": [7, 8, 9, 10, 11],
+      "files_modify": [
+        "README.md"
+      ],
+      "acceptance": [
+        "grep 'SplitPay' README.md — найдено",
+        "grep 'docker-compose' README.md — найдено",
+        "grep 'Railway' README.md — найдено"
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Обновить CLAUDE.md и финальная проверка",
+      "description": "CLAUDE.md: название SplitPay, описание, стек, ссылка на design doc. Финальная проверка: ruff, pytest, docker build.",
+      "status": "pending",
+      "branch": "feat/claude-md-final",
+      "depends_on": [12],
+      "files_modify": [
+        "CLAUDE.md",
+        ".github/workflows/ci.yml"
+      ],
       "acceptance": [
         "ruff check bot/ tests/ — без ошибок",
         "pytest tests/ -v — все тесты проходят",
-        "docker build -t tgpay . — успешно"
+        "docker build -t splitpay . — успешно"
       ]
     }
   ]
