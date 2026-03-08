@@ -1,4 +1,6 @@
-"""Callback data классы для inline-кнопок.
+from aiogram.filters.callback_data import CallbackData
 
-TODO: будет добавлен ExpenseCallback в шаге 5 (feat/new-card-design).
-"""
+
+class ExpenseCallback(CallbackData, prefix="exp"):
+    expense_id: int
+    action: str  # "join" | "settle"
