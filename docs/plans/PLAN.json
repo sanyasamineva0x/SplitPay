@@ -195,7 +195,7 @@
       "id": 11,
       "title": "Обновить README + рефакторинг по ревью",
       "description": "1) Полностью переписать README: описание SplitPay, возможности, быстрый старт (Docker Compose + Railway), стек, архитектура, примеры использования. 2) Рефакторинг по замечаниям ревью PR #20/#21: извлечь expense_keyboard() из inline.py и callbacks.py в bot/keyboards.py (устранить дупликацию), убрать прямые вызовы ExpenseRepo из роутеров — вся работа с БД через ExpenseService. 3) Сгенерировать OG-картинку (assets/og-preview.png, 1280x640) для GitHub social preview — Pillow-скрипт. 4) Создать GIF-демо (assets/demo.gif) для README — показать inline-запрос → карточка → кнопки.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/readme-update",
       "depends_on": [7, 8, 9, 10],
       "files_modify": [

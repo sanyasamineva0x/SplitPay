@@ -6,8 +6,6 @@ from aiogram import Bot, Router
 from aiogram.types import (
     BufferedInputFile,
     ChosenInlineResult,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     InlineQuery,
     InlineQueryResultArticle,
     InputMediaPhoto,
@@ -15,8 +13,8 @@ from aiogram.types import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.callback_data import ExpenseCallback
-from bot.db.repositories import ExpenseRepo, UserRepo
+from bot.db.repositories import UserRepo
+from bot.keyboards import expense_keyboard
 from bot.services.expense_service import ExpenseService
 
 router = Router()
@@ -60,28 +58,6 @@ def _format_amount(kopecks: int) -> str:
     if kop:
         return f"{rubles},{kop:02d} ₽"
     return f"{rubles:,} ₽".replace(",", " ")
-
-
-def expense_keyboard(expense_id: int) -> InlineKeyboardMarkup:
-    """Клавиатура с кнопками 'Я должен' и 'Я отдал'."""
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="Я должен 💰",
-                    callback_data=ExpenseCallback(
-                        expense_id=expense_id, action="join"
-                    ).pack(),
-                ),
-                InlineKeyboardButton(
-                    text="Я отдал ✓",
-                    callback_data=ExpenseCallback(
-                        expense_id=expense_id, action="settle"
-                    ).pack(),
-                ),
-            ]
-        ]
-    )
 
 
 @router.inline_query()
@@ -177,7 +153,7 @@ async def on_chosen_inline_result(
 
     # Сохранить inline_message_id
     if chosen.inline_message_id:
-        await ExpenseRepo.set_inline_message_id(
+        await ExpenseService.set_inline_message_id(
             session, expense.id, chosen.inline_message_id
         )
 
@@ -190,7 +166,7 @@ async def on_chosen_inline_result(
     await bot.delete_message(chat_id=creator_id, message_id=photo_msg.message_id)
 
     # Сохранить file_id
-    await ExpenseRepo.set_card_file_id(session, expense.id, file_id)
+    await ExpenseService.set_card_file_id(session, expense.id, file_id)
 
     # Обновить inline-сообщение: текст → фото + кнопки
     if chosen.inline_message_id:

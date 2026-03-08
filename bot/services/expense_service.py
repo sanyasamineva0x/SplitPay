@@ -129,6 +129,24 @@ class ExpenseService:
         return ExpenseResult(expense=expense, card_image=card)
 
     @staticmethod
+    async def set_inline_message_id(
+        session: AsyncSession,
+        expense_id: int,
+        inline_message_id: str,
+    ) -> None:
+        """Сохранить inline_message_id для расхода."""
+        await ExpenseRepo.set_inline_message_id(session, expense_id, inline_message_id)
+
+    @staticmethod
+    async def set_card_file_id(
+        session: AsyncSession,
+        expense_id: int,
+        file_id: str,
+    ) -> None:
+        """Сохранить file_id карточки расхода."""
+        await ExpenseRepo.set_card_file_id(session, expense_id, file_id)
+
+    @staticmethod
     async def settle_debt(
         session: AsyncSession,
         expense_id: int,

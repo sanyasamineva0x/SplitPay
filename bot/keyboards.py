@@ -1,6 +1,7 @@
-from aiogram.types import InlineKeyboardButton
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from bot.callback_data import ExpenseCallback
 from bot.enums import BankName
 
 BANK_LABELS: dict[str, str] = {
@@ -10,6 +11,28 @@ BANK_LABELS: dict[str, str] = {
     BankName.VTB: "ВТБ",
     BankName.RAIFFEISEN: "Райффайзен",
 }
+
+
+def expense_keyboard(expense_id: int) -> InlineKeyboardMarkup:
+    """Клавиатура с кнопками 'Я должен' и 'Я отдал'."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="Я должен 💰",
+                    callback_data=ExpenseCallback(
+                        expense_id=expense_id, action="join"
+                    ).pack(),
+                ),
+                InlineKeyboardButton(
+                    text="Я отдал ✓",
+                    callback_data=ExpenseCallback(
+                        expense_id=expense_id, action="settle"
+                    ).pack(),
+                ),
+            ]
+        ]
+    )
 
 
 def bank_selection_keyboard() -> InlineKeyboardBuilder:
