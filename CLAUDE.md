@@ -1,9 +1,9 @@
-# TGpay
+# SplitPay
 
-Inline Telegram-бот для запросов на оплату через СБП.
+Inline Telegram-бот для разделения расходов между друзьями.
 
 ## Стек
-- Python 3.12, aiogram 3, SQLAlchemy 2.0 async, aiosqlite, Pillow, qrcode
+- Python 3.12, aiogram 3, SQLAlchemy 2.0 async, aiosqlite, Pillow
 - pydantic-settings для конфигурации
 - pytest + pytest-asyncio для тестов
 - ruff для линтинга и форматирования
@@ -13,9 +13,10 @@ Layered monolith: `bot/routers/` → `bot/services/` → `bot/db/repositories.py
 Слои не пересекаются. Handlers не обращаются к БД напрямую.
 
 ## Документы
-- Дизайн: `docs/plans/2026-03-07-tgpay-design.md`
-- Implementation plan: `docs/plans/2026-03-07-implementation.md`
+- Дизайн: `docs/plans/2026-03-08-splitpay-design.md`
+- Implementation plan: `docs/plans/2026-03-08-implementation.md`
 - Прогресс: `docs/plans/PLAN.json`
+- Промпты агентов: `docs/plans/PROMPTS.md`
 
 ## Конвенции
 - Язык кода: Python, комментарии и строки на русском
@@ -33,6 +34,7 @@ pip install -e ".[dev]"        # установка
 pytest tests/ -v               # тесты
 ruff check bot/ tests/         # линт
 ruff format bot/ tests/        # формат
+docker-compose up -d           # запуск через Docker
 python -m bot                  # запуск (нужен .env с BOT_TOKEN)
 ```
 
