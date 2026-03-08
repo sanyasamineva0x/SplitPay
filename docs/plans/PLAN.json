@@ -79,7 +79,7 @@
       "id": 4,
       "title": "Репозиторий ExpenseRepo",
       "description": "CRUD: create, get_by_id, set_inline_message_id, set_card_file_id, add_participant, settle_participant, update_participant_amounts. TDD.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/expense-repo",
       "depends_on": [3],
       "files_modify": [
