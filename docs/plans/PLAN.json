@@ -194,7 +194,7 @@
     {
       "id": 11,
       "title": "Обновить README + рефакторинг по ревью",
-      "description": "1) Полностью переписать README: описание SplitPay, возможности, быстрый старт (Docker Compose + Railway), стек, архитектура, примеры использования. 2) Рефакторинг по замечаниям ревью PR #20/#21: извлечь expense_keyboard() из inline.py и callbacks.py в bot/keyboards.py (устранить дупликацию), убрать прямые вызовы ExpenseRepo из роутеров — вся работа с БД через ExpenseService.",
+      "description": "1) Полностью переписать README: описание SplitPay, возможности, быстрый старт (Docker Compose + Railway), стек, архитектура, примеры использования. 2) Рефакторинг по замечаниям ревью PR #20/#21: извлечь expense_keyboard() из inline.py и callbacks.py в bot/keyboards.py (устранить дупликацию), убрать прямые вызовы ExpenseRepo из роутеров — вся работа с БД через ExpenseService. 3) Сгенерировать OG-картинку (assets/og-preview.png, 1280x640) для GitHub social preview — Pillow-скрипт. 4) Создать GIF-демо (assets/demo.gif) для README — показать inline-запрос → карточка → кнопки.",
       "status": "pending",
       "branch": "feat/readme-update",
       "depends_on": [7, 8, 9, 10],
@@ -204,13 +204,20 @@
         "bot/routers/inline.py",
         "bot/routers/callbacks.py"
       ],
+      "files_create": [
+        "assets/og-preview.png",
+        "assets/demo.gif",
+        "scripts/generate_og.py"
+      ],
       "acceptance": [
         "grep 'SplitPay' README.md — найдено",
         "grep 'docker-compose' README.md — найдено",
         "grep 'Railway' README.md — найдено",
         "expense_keyboard определена только в bot/keyboards.py (нет дупликации)",
         "grep -r 'ExpenseRepo' bot/routers/ — пусто (роутеры работают через сервис)",
-        "pytest tests/ -v — все тесты проходят"
+        "pytest tests/ -v — все тесты проходят",
+        "assets/og-preview.png существует (1280x640)",
+        "assets/demo.gif существует и вставлен в README"
       ]
     },
     {
