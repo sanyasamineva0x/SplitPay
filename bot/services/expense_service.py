@@ -62,6 +62,58 @@ def _recalculate_shares(total: int, participants_count: int) -> tuple[int, int]:
     return per_person, remainder
 
 
+def _format_amount(kopecks: int) -> str:
+    """Форматирование суммы для текста."""
+    rubles = kopecks // 100
+    kop = kopecks % 100
+    if kop:
+        return f"{rubles},{kop:02d} ₽"
+    return f"{rubles:,} ₽".replace(",", " ")
+
+
+async def format_expense_text(session: AsyncSession, expense: Expense) -> str:
+    """Сформировать текстовое представление расхода для inline-сообщения."""
+    creator = await UserRepo.get_by_id(session, expense.creator_id)
+    creator_name = (
+        f"@{creator.username}"
+        if creator and creator.username
+        else (creator.first_name if creator else str(expense.creator_id))
+    )
+    bank_label = BANK_LABELS.get(creator.bank_name, "") if creator else ""
+    phone = creator.phone or "" if creator else ""
+
+    lines = [
+        f"💰 {_format_amount(expense.amount)} — {expense.description}",
+        f"👤 Создал: {creator_name}",
+    ]
+    if bank_label:
+        lines.append(f"🏦 {bank_label}")
+    if phone:
+        lines.append(f"📱 {phone}")
+
+    lines.append("")
+
+    if expense.participants:
+        user_ids = [p.user_id for p in expense.participants]
+        user_list = await UserRepo.get_by_ids(session, user_ids)
+        users = {u.telegram_id: u for u in user_list}
+
+        lines.append("Должники:")
+        for p in expense.participants:
+            user = users.get(p.user_id)
+            name = (
+                f"@{user.username}"
+                if user and user.username
+                else (user.first_name if user else str(p.user_id))
+            )
+            settled = " ✅" if p.is_settled else ""
+            lines.append(f"  • {name} — {_format_amount(p.amount)}{settled}")
+    else:
+        lines.append("Пока никто не присоединился")
+
+    return "\n".join(lines)
+
+
 class ExpenseService:
     @staticmethod
     async def create_expense(
