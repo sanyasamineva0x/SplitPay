@@ -130,6 +130,68 @@ async def test_settle_creator_cannot(db_session):
         await ExpenseService.settle_debt(db_session, result.expense.id, 1)
 
 
+async def test_join_expense_duplicate(db_session):
+    """Повторный join — ошибка."""
+    await _create_user(db_session, 1, "Petya", "petya")
+    await _create_user(db_session, 2, "Vasya", "vasya")
+
+    result = await ExpenseService.create_expense(db_session, 1, 100000, "test")
+    await ExpenseService.join_expense(db_session, result.expense.id, 2)
+
+    with pytest.raises(ValueError, match="уже в списке"):
+        await ExpenseService.join_expense(db_session, result.expense.id, 2)
+
+
+async def test_settle_not_participant(db_session):
+    """Settle для пользователя, который не join-ил — ошибка."""
+    await _create_user(db_session, 1, "Petya", "petya")
+    await _create_user(db_session, 2, "Vasya", "vasya")
+
+    result = await ExpenseService.create_expense(db_session, 1, 100000, "test")
+
+    with pytest.raises(ValueError, match="Участник не найден"):
+        await ExpenseService.settle_debt(db_session, result.expense.id, 2)
+
+
+async def test_validate_description(db_session):
+    """Описание: 1-100 символов, пробелы обрезаются."""
+    await _create_user(db_session, 1, "Petya", "petya")
+
+    # Пустая строка
+    with pytest.raises(ValueError):
+        await ExpenseService.create_expense(db_session, 1, 10000, "")
+
+    # Только пробелы
+    with pytest.raises(ValueError):
+        await ExpenseService.create_expense(db_session, 1, 10000, "   ")
+
+    # Слишком длинное
+    with pytest.raises(ValueError):
+        await ExpenseService.create_expense(db_session, 1, 10000, "x" * 101)
+
+    # Нормальное — OK
+    r = await ExpenseService.create_expense(db_session, 1, 10000, "  кофе  ")
+    assert r.expense.description == "кофе"
+
+
+async def test_join_after_settle_recalculates_all(db_session):
+    """Join после settle обновляет доли всех участников, включая settled."""
+    await _create_user(db_session, 1, "Petya", "petya")
+    await _create_user(db_session, 2, "Vasya", "vasya")
+    await _create_user(db_session, 3, "Masha", "masha")
+
+    result = await ExpenseService.create_expense(db_session, 1, 100000, "test")
+    await ExpenseService.join_expense(db_session, result.expense.id, 2)
+    # Vasya оплатил (settled с долей 100000)
+    await ExpenseService.settle_debt(db_session, result.expense.id, 2)
+    # Masha присоединяется — доли должны пересчитаться для ВСЕХ
+    r = await ExpenseService.join_expense(db_session, result.expense.id, 3)
+
+    amounts = sorted(p.amount for p in r.expense.participants)
+    assert amounts == [50000, 50000]
+    assert sum(amounts) == 100000
+
+
 async def test_validate_amount_min_max(db_session):
     """Проверка границ суммы: 1₽ — 1 000 000₽."""
     await _create_user(db_session, 1, "Petya", "petya")

@@ -38,6 +38,16 @@ class UserRepo:
         return result.scalar_one_or_none()
 
     @staticmethod
+    async def get_by_ids(session: AsyncSession, telegram_ids: list[int]) -> list[User]:
+        """Загрузить пользователей по списку ID одним запросом."""
+        if not telegram_ids:
+            return []
+        result = await session.execute(
+            select(User).where(User.telegram_id.in_(telegram_ids))
+        )
+        return list(result.scalars().all())
+
+    @staticmethod
     async def set_onboarded(
         session: AsyncSession,
         telegram_id: int,

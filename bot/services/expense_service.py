@@ -3,10 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from io import BytesIO
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.db.models import Expense, User
+from bot.db.models import Expense
 from bot.db.repositories import ExpenseRepo, UserRepo
 from bot.keyboards import BANK_LABELS
 from bot.services.card_renderer import Participant, render_card
@@ -27,15 +26,10 @@ async def _render_expense_card(session: AsyncSession, expense: Expense) -> Bytes
     """Загрузить связанные данные и отрендерить карточку."""
     creator = await UserRepo.get_by_id(session, expense.creator_id)
 
-    # Загрузить пользователей-участников одним запросом
+    # Загрузить пользователей-участников одним запросом через UserRepo
     user_ids = [p.user_id for p in expense.participants]
-    if user_ids:
-        result = await session.execute(
-            select(User).where(User.telegram_id.in_(user_ids))
-        )
-        users = {u.telegram_id: u for u in result.scalars().all()}
-    else:
-        users = {}
+    user_list = await UserRepo.get_by_ids(session, user_ids)
+    users = {u.telegram_id: u for u in user_list}
 
     creator_name = f"@{creator.username}" if creator.username else creator.first_name
 
@@ -81,6 +75,7 @@ class ExpenseService:
             raise ValueError(
                 f"Сумма должна быть от {MIN_AMOUNT // 100}₽ до {MAX_AMOUNT // 100:,}₽"
             )
+        description = description.strip()
         if not (1 <= len(description) <= MAX_DESCRIPTION_LEN):
             raise ValueError(f"Описание: 1-{MAX_DESCRIPTION_LEN} символов")
 
@@ -122,8 +117,7 @@ class ExpenseService:
         per_person, remainder = _recalculate_shares(expense.amount, all_count)
 
         amounts: dict[int, int] = {}
-        unsettled = [p for p in expense.participants if not p.is_settled]
-        for i, p in enumerate(unsettled):
+        for i, p in enumerate(expense.participants):
             amounts[p.user_id] = per_person + (remainder if i == 0 else 0)
 
         await ExpenseRepo.update_participant_amounts(session, expense_id, amounts)
