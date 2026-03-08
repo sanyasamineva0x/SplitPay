@@ -224,7 +224,7 @@
       "id": 12,
       "title": "Финальная проверка",
       "description": "ruff check + format, pytest, docker build. Ручной тест бота.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/final-check",
       "depends_on": [11],
       "acceptance": [
