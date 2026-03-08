@@ -1,7 +1,7 @@
 [project]
-name = "tgpay"
+name = "splitpay"
 version = "0.1.0"
-description = "Inline Telegram-бот для запросов на оплату через СБП"
+description = "Inline Telegram-бот для разделения расходов между друзьями"
 requires-python = ">=3.10"
 dependencies = [
     "aiogram>=3.15,<4",

@@ -1,30 +1,24 @@
-# TGpay
+# SplitPay
 
-> Inline Telegram-бот для мгновенных запросов на оплату через СБП
+> Inline Telegram-бот для разделения расходов между друзьями
 
 ## Что это
 
-Пишешь `@TGpayBot 500 за ужин` в любом чате — бот генерирует стильную карточку с QR-кодом СБП. Любой участник чата нажимает «Я оплатил» — карточка обновляется в реальном времени.
+Пишешь `@SplitPayBot 3000 за ужин` в любом чате — бот создаёт карточку с суммой и реквизитами. Участники нажимают «Я должен» — бот пересчитывает доли. После перевода отмечают «Я отдал» — карточка обновляется.
 
 ## Возможности
 
 - **Inline-режим** — работает в любом чате без добавления бота
-- **Карточка оплаты** — PNG с суммой, описанием, QR-кодом и списком оплативших
-- **СБП deeplink** — QR-код ведёт прямо в приложение банка (Сбер, Т-Банк, Альфа, ВТБ, Райффайзен)
+- **Автоматический split** — сумма делится поровну между участниками
+- **Динамические доли** — каждый новый участник пересчитывает суммы
+- **Карточка расхода** — PNG с суммой, реквизитами и списком должников
 - **Онбординг** — /start → ввод телефона → выбор банка → готов
-- **Обновление в реальном времени** — карточка перерисовывается при каждой новой оплате
 
 ## Быстрый старт
 
 ```bash
-docker run -e BOT_TOKEN=your_token ghcr.io/sanyasamineva0x/tgpay
-```
-
-Или локально:
-
-```bash
-git clone https://github.com/sanyasamineva0x/TGpay.git
-cd TGpay
+git clone https://github.com/sanyasamineva0x/SplitPay.git
+cd SplitPay
 cp .env.example .env  # заполнить BOT_TOKEN
 pip install -e .
 python -m bot
@@ -32,15 +26,15 @@ python -m bot
 
 ## Стек
 
-Python 3.12 · aiogram 3 · SQLAlchemy 2.0 · Pillow · qrcode · aiosqlite · pydantic-settings
+Python 3.12 · aiogram 3 · SQLAlchemy 2.0 · Pillow · aiosqlite · pydantic-settings
 
 ## Архитектура
 
 ```
 bot/routers/     →  bot/services/     →  bot/db/repositories.py  →  SQLite
-  private.py           payment.py            UserRepo
-  inline.py            card_renderer.py      PaymentRepo
-  callbacks.py         sbp.py
+  private.py           card_renderer.py      UserRepo
+  inline.py            expense_service.py    ExpenseRepo
+  callbacks.py
 ```
 
 Layered monolith: чистые слои, один Docker-контейнер.

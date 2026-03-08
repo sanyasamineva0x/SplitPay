@@ -37,7 +37,7 @@
       "id": 2,
       "title": "Переименование TGpay → SplitPay + тексты",
       "description": "Переименовать проект во всех файлах. Обновить тексты онбординга: приветствие, инструкции, убрать СБП. Обновить CLAUDE.md: название, описание, стек, ссылки.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/rename-splitpay",
       "depends_on": [1],
       "files_modify": [
