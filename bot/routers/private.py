@@ -26,14 +26,15 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession) 
     user = await UserRepo.get_by_id(session, message.from_user.id)
     if user.is_onboarded:
         await message.answer(
-            "Ты уже настроен! Используй <b>@TGpayBot сумма описание</b> в любом чате."
+            "Ты уже настроен! Используй <b>@SplitPayBot сумма описание</b> в любом чате."
         )
         return
 
     await state.set_state(OnboardingStates.waiting_phone)
     await message.answer(
-        "Привет! Я помогу создавать запросы на оплату через СБП.\n\n"
-        "Введи номер телефона в формате <b>+7XXXXXXXXXX</b>:"
+        "Привет! Я помогу разделить расходы между друзьями.\n\n"
+        "Введи номер телефона в формате <b>+7XXXXXXXXXX</b>, "
+        "чтобы друзья знали куда переводить:"
     )
 
 
@@ -50,7 +51,9 @@ async def process_phone(message: Message, state: FSMContext) -> None:
     await state.set_state(OnboardingStates.waiting_bank)
 
     kb = bank_selection_keyboard()
-    await message.answer("Выбери банк для приёма СБП:", reply_markup=kb.as_markup())
+    await message.answer(
+        "Выбери банк для приёма переводов:", reply_markup=kb.as_markup()
+    )
 
 
 @router.callback_query(OnboardingStates.waiting_bank, F.data.startswith("bank:"))
@@ -70,7 +73,8 @@ async def process_bank(
 
     await state.clear()
     await callback.message.edit_text(
-        "Готово! Теперь используй <b>@TGpayBot сумма описание</b> в любом чате.\n\n"
-        "Пример: <code>@TGpayBot 500 за ужин</code>"
+        "Готово! Теперь в любом чате набери:\n\n"
+        "<code>@SplitPayBot 500 за ужин</code>\n\n"
+        "Бот создаст карточку — друзья смогут разделить счёт."
     )
     await callback.answer()

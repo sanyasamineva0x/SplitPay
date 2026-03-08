@@ -47,7 +47,7 @@ def render_placeholder() -> BytesIO:
     font_sub = _load_font(18)
 
     # Бренд
-    text = "TGpay"
+    text = "SplitPay"
     bbox = draw.textbbox((0, 0), text, font=font_brand)
     text_w = bbox[2] - bbox[0]
     draw.text(
