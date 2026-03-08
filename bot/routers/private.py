@@ -1,6 +1,6 @@
 import re
 
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
@@ -15,7 +15,9 @@ PHONE_RE = re.compile(r"^\+7\d{10}$")
 
 
 @router.message(CommandStart())
-async def cmd_start(message: Message, state: FSMContext, session: AsyncSession) -> None:
+async def cmd_start(
+    message: Message, state: FSMContext, session: AsyncSession, bot: Bot
+) -> None:
     await UserRepo.upsert(
         session,
         telegram_id=message.from_user.id,
@@ -25,8 +27,9 @@ async def cmd_start(message: Message, state: FSMContext, session: AsyncSession) 
 
     user = await UserRepo.get_by_id(session, message.from_user.id)
     if user.is_onboarded:
+        me = await bot.get_me()
         await message.answer(
-            "Ты уже настроен! Используй <b>@SplitPayBot сумма описание</b> в любом чате."
+            f"Ты уже настроен! Используй <b>@{me.username} сумма описание</b> в любом чате."
         )
         return
 
@@ -58,7 +61,7 @@ async def process_phone(message: Message, state: FSMContext) -> None:
 
 @router.callback_query(OnboardingStates.waiting_bank, F.data.startswith("bank:"))
 async def process_bank(
-    callback: CallbackQuery, state: FSMContext, session: AsyncSession
+    callback: CallbackQuery, state: FSMContext, session: AsyncSession, bot: Bot
 ) -> None:
     bank_name = callback.data.split(":")[1]
     data = await state.get_data()
@@ -71,10 +74,11 @@ async def process_bank(
         bank_name=bank_name,
     )
 
+    me = await bot.get_me()
     await state.clear()
     await callback.message.edit_text(
         "Готово! Теперь в любом чате набери:\n\n"
-        "<code>@SplitPayBot 500 за ужин</code>\n\n"
+        f"<code>@{me.username} 500 за ужин</code>\n\n"
         "Бот создаст карточку — друзья смогут разделить счёт."
     )
     await callback.answer()

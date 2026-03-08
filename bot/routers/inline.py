@@ -91,6 +91,8 @@ async def on_inline_query(
 ) -> None:
     """Обработка inline query: парсинг суммы и описания."""
     user = await UserRepo.get_by_id(session, inline_query.from_user.id)
+    me = await bot.get_me()
+    bot_username = f"@{me.username}"
 
     if not user or not user.is_onboarded:
         await inline_query.answer(
@@ -98,9 +100,9 @@ async def on_inline_query(
                 InlineQueryResultArticle(
                     id="not_onboarded",
                     title="Сначала настройте бота",
-                    description="Напишите /start в ЛС @SplitPayBot",
+                    description=f"Напишите /start в ЛС {bot_username}",
                     input_message_content=InputTextMessageContent(
-                        message_text="Напишите /start боту @SplitPayBot",
+                        message_text=f"Напишите /start боту {bot_username}",
                     ),
                 )
             ],
@@ -118,8 +120,8 @@ async def on_inline_query(
                     title="Формат: сумма описание",
                     description="Пример: 3000 за ужин",
                     input_message_content=InputTextMessageContent(
-                        message_text="Формат: @SplitPayBot [сумма] [описание]\n"
-                        "Пример: @SplitPayBot 3000 за ужин",
+                        message_text=f"Формат: {bot_username} [сумма] [описание]\n"
+                        f"Пример: {bot_username} 3000 за ужин",
                     ),
                 )
             ],
