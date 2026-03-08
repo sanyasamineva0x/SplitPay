@@ -160,7 +160,7 @@
       "id": 9,
       "title": "docker-compose.yml",
       "description": "Сервис bot: build Dockerfile, env_file .env, volume ./data для SQLite, restart unless-stopped. Обновить default database_url в config.py.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/docker-compose",
       "depends_on": [2],
       "files_create": [
