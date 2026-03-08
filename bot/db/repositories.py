@@ -63,18 +63,14 @@ class ExpenseRepo:
         amount: int,
         description: str,
     ) -> Expense:
-        expense = Expense(
-            creator_id=creator_id, amount=amount, description=description
-        )
+        expense = Expense(creator_id=creator_id, amount=amount, description=description)
         session.add(expense)
         await session.commit()
         return expense
 
     @staticmethod
     async def get_by_id(session: AsyncSession, expense_id: int) -> Expense | None:
-        result = await session.execute(
-            select(Expense).where(Expense.id == expense_id)
-        )
+        result = await session.execute(select(Expense).where(Expense.id == expense_id))
         return result.scalar_one_or_none()
 
     @staticmethod
@@ -83,9 +79,7 @@ class ExpenseRepo:
         expense_id: int,
         inline_message_id: str,
     ) -> None:
-        result = await session.execute(
-            select(Expense).where(Expense.id == expense_id)
-        )
+        result = await session.execute(select(Expense).where(Expense.id == expense_id))
         expense = result.scalar_one()
         expense.inline_message_id = inline_message_id
         await session.commit()
@@ -96,9 +90,7 @@ class ExpenseRepo:
         expense_id: int,
         card_file_id: str,
     ) -> None:
-        result = await session.execute(
-            select(Expense).where(Expense.id == expense_id)
-        )
+        result = await session.execute(select(Expense).where(Expense.id == expense_id))
         expense = result.scalar_one()
         expense.card_file_id = card_file_id
         await session.commit()

@@ -197,7 +197,7 @@ def render_card(
         )
         y += 1 + 16
 
-        hint1 = 'Нажмите «Я должен»,'
+        hint1 = "Нажмите «Я должен»,"
         hint2 = "чтобы разделить счёт"
         bbox1 = draw.textbbox((0, 0), hint1, font=font_hint)
         bbox2 = draw.textbbox((0, 0), hint2, font=font_hint)

@@ -42,9 +42,15 @@ async def test_user_set_onboarded(db_session):
 
 async def _create_users(db_session):
     """Хелпер: создать 3 пользователей для тестов."""
-    await UserRepo.upsert(db_session, telegram_id=1, first_name="Петя", username="petya")
-    await UserRepo.upsert(db_session, telegram_id=2, first_name="Вася", username="vasya")
-    await UserRepo.upsert(db_session, telegram_id=3, first_name="Маша", username="masha")
+    await UserRepo.upsert(
+        db_session, telegram_id=1, first_name="Петя", username="petya"
+    )
+    await UserRepo.upsert(
+        db_session, telegram_id=2, first_name="Вася", username="vasya"
+    )
+    await UserRepo.upsert(
+        db_session, telegram_id=3, first_name="Маша", username="masha"
+    )
 
 
 async def test_expense_create(db_session):
@@ -149,9 +155,7 @@ async def test_expense_settle_participant_already_settled(db_session):
     await ExpenseRepo.add_participant(
         db_session, expense_id=expense.id, user_id=2, amount=150000
     )
-    await ExpenseRepo.settle_participant(
-        db_session, expense_id=expense.id, user_id=2
-    )
+    await ExpenseRepo.settle_participant(db_session, expense_id=expense.id, user_id=2)
     # Повторная отметка — False
     result = await ExpenseRepo.settle_participant(
         db_session, expense_id=expense.id, user_id=2
