@@ -1,7 +1,12 @@
+import os
+
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from bot.db.models import Base
+
+# Фиктивный токен для тестов (get_settings() требует BOT_TOKEN)
+os.environ.setdefault("BOT_TOKEN", "000000000:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
 
 
 @pytest.fixture
