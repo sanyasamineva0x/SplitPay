@@ -16,12 +16,15 @@ from aiogram.types import (
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from pathlib import Path
+
 from bot.config import get_settings
 from bot.db.repositories import UserRepo
 from bot.keyboards import expense_keyboard
-from bot.services.card_renderer import render_placeholder
 from bot.services.expense_service import ExpenseService
 from bot.upload import upload_photo
+
+PLACEHOLDER_PATH = Path(__file__).parent.parent.parent / "assets" / "placeholder.png"
 
 logger = logging.getLogger(__name__)
 
@@ -77,8 +80,7 @@ async def _get_placeholder_file_id(bot: Bot, chat_id: int) -> str:
     if _placeholder_file_id is not None:
         return _placeholder_file_id
 
-    placeholder = render_placeholder()
-    file_id = await upload_photo(bot, placeholder.read(), chat_id)
+    file_id = await upload_photo(bot, PLACEHOLDER_PATH.read_bytes(), chat_id)
     _placeholder_file_id = file_id
     return file_id
 
