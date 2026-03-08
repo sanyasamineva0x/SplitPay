@@ -142,7 +142,7 @@
       "id": 8,
       "title": "Переписать callback handler",
       "description": "Обработка ExpenseCallback: action='join' — добавить участника и пересчитать, action='settle' — отметить погашение. Защита: создатель не может join/settle, дубликаты отклоняются. Workaround file_id для inline. Тесты.",
-      "status": "pending",
+      "status": "done",
       "branch": "feat/callbacks-expense",
       "depends_on": [6],
       "files_modify": [
