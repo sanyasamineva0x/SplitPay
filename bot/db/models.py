@@ -45,9 +45,7 @@ class Expense(TimestampMixin, Base):
 class ExpenseParticipant(Base):
     __tablename__ = "expense_participants"
 
-    expense_id: Mapped[int] = mapped_column(
-        ForeignKey("expenses.id"), primary_key=True
-    )
+    expense_id: Mapped[int] = mapped_column(ForeignKey("expenses.id"), primary_key=True)
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.telegram_id"), primary_key=True
     )
