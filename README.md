@@ -2,6 +2,10 @@
 
 > Inline Telegram-бот для разделения расходов между друзьями
 
+<p align="center">
+  <img src="assets/demo.gif" alt="SplitPay demo" width="480">
+</p>
+
 ## Что это
 
 Пишешь `@SplitPayBot 3000 за ужин` в любом чате — бот создаёт карточку с суммой и реквизитами. Участники нажимают «Я должен» — бот пересчитывает доли. После перевода отмечают «Я отдал» — карточка обновляется.
@@ -12,9 +16,23 @@
 - **Автоматический split** — сумма делится поровну между участниками
 - **Динамические доли** — каждый новый участник пересчитывает суммы
 - **Карточка расхода** — PNG с суммой, реквизитами и списком должников
+- **Статусы оплаты** — ○ должен / ✓ отдал, обновляются в реальном времени
 - **Онбординг** — /start → ввод телефона → выбор банка → готов
 
+## Как использовать
+
+```
+1. Напишите /start боту @SplitPayBot в личные сообщения
+2. Пройдите онбординг: укажите телефон и банк
+3. В любом чате наберите: @SplitPayBot 3000 за ужин
+4. Выберите результат — карточка появится в чате
+5. Участники нажимают «Я должен 💰» — доли пересчитываются
+6. После перевода нажимают «Я отдал ✓» — статус обновляется
+```
+
 ## Быстрый старт
+
+### Локально
 
 ```bash
 git clone https://github.com/sanyasamineva0x/SplitPay.git
@@ -23,6 +41,21 @@ cp .env.example .env  # заполнить BOT_TOKEN
 pip install -e .
 python -m bot
 ```
+
+### Docker Compose
+
+```bash
+git clone https://github.com/sanyasamineva0x/SplitPay.git
+cd SplitPay
+cp .env.example .env  # заполнить BOT_TOKEN
+docker-compose up -d
+```
+
+### Railway
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template?referralCode=splitpay)
+
+Добавьте переменную окружения `BOT_TOKEN` в настройках Railway.
 
 ## Стек
 
@@ -37,7 +70,7 @@ bot/routers/     →  bot/services/     →  bot/db/repositories.py  →  SQLite
   callbacks.py
 ```
 
-Layered monolith: чистые слои, один Docker-контейнер.
+Layered monolith: чистые слои, один Docker-контейнер. Роутеры не обращаются к БД напрямую — вся логика в сервисах.
 
 ## Разработка
 
@@ -46,6 +79,7 @@ pip install -e ".[dev]"     # установка с dev-зависимостям
 pytest tests/ -v            # тесты
 ruff check bot/ tests/      # линт
 ruff format bot/ tests/     # форматирование
+docker-compose up -d        # запуск через Docker
 python -m bot               # запуск (нужен .env с BOT_TOKEN)
 ```
 

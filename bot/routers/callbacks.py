@@ -4,39 +4,16 @@ from aiogram import Bot, Router
 from aiogram.types import (
     BufferedInputFile,
     CallbackQuery,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
     InputMediaPhoto,
 )
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.callback_data import ExpenseCallback
-from bot.db.repositories import ExpenseRepo, UserRepo
+from bot.db.repositories import UserRepo
+from bot.keyboards import expense_keyboard
 from bot.services.expense_service import ExpenseService
 
 router = Router()
-
-
-def expense_keyboard(expense_id: int) -> InlineKeyboardMarkup:
-    """Клавиатура для карточки расхода."""
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="Я должен 💰",
-                    callback_data=ExpenseCallback(
-                        expense_id=expense_id, action="join"
-                    ).pack(),
-                ),
-                InlineKeyboardButton(
-                    text="Я отдал ✓",
-                    callback_data=ExpenseCallback(
-                        expense_id=expense_id, action="settle"
-                    ).pack(),
-                ),
-            ]
-        ]
-    )
 
 
 @router.callback_query(ExpenseCallback.filter())
@@ -89,7 +66,7 @@ async def on_expense_callback(
     await bot.delete_message(chat_id=user_id, message_id=photo_msg.message_id)
 
     # Сохранить file_id
-    await ExpenseRepo.set_card_file_id(session, expense_id, file_id)
+    await ExpenseService.set_card_file_id(session, expense_id, file_id)
 
     # Обновить inline-сообщение
     if callback.inline_message_id:
