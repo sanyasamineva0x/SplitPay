@@ -1,4 +1,9 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+)
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bot.callback_data import ExpenseCallback
@@ -35,9 +40,19 @@ def expense_keyboard(expense_id: int) -> InlineKeyboardMarkup:
     )
 
 
+def phone_request_keyboard() -> ReplyKeyboardMarkup:
+    """Клавиатура с кнопкой 'Поделиться номером'."""
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="📱 Поделиться номером", request_contact=True)]],
+        resize_keyboard=True,
+        one_time_keyboard=True,
+    )
+
+
 def bank_selection_keyboard() -> InlineKeyboardBuilder:
     builder = InlineKeyboardBuilder()
     for bank_id, label in BANK_LABELS.items():
         builder.add(InlineKeyboardButton(text=label, callback_data=f"bank:{bank_id}"))
+    builder.add(InlineKeyboardButton(text="Другой банк", callback_data="bank:other"))
     builder.adjust(2)
     return builder
