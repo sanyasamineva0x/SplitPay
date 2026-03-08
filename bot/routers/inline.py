@@ -6,6 +6,8 @@ import re
 from aiogram import Bot, Router
 from aiogram.types import (
     ChosenInlineResult,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
     InlineQuery,
     InlineQueryResultArticle,
     InlineQueryResultCachedPhoto,
@@ -154,7 +156,14 @@ async def on_inline_query(
         )
         return
 
-    # Отправляем фото-placeholder (позже заменим на реальную карточку)
+    # Отправляем фото-placeholder с кнопкой-заглушкой.
+    # reply_markup ОБЯЗАТЕЛЕН — без него Telegram не пришлёт inline_message_id
+    # в chosen_inline_result, и edit_message_media будет невозможен.
+    loading_keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="⏳ Загрузка...", callback_data="noop")]
+        ]
+    )
     await inline_query.answer(
         results=[
             InlineQueryResultCachedPhoto(
@@ -164,6 +173,7 @@ async def on_inline_query(
                 description="Нажмите, чтобы отправить в чат",
                 caption=f"💰 {_format_amount(amount)} — {description}\n\n"
                 "Загрузка карточки...",
+                reply_markup=loading_keyboard,
             )
         ],
         cache_time=5,
